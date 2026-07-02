@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>(function(){var h=location.hostname;if(h==='ispani-site.web.app'||h==='ispani-site.firebaseapp.com'){location.replace('https://workley.co.za'+location.pathname+location.search+location.hash);}})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2B57DC">
+<title>How Workley works · Workley</title>
+<meta name="description" content="How Workley works: a free stage for South Africa's university ICT students to show their skills, compete fairly and earn - and an affordable, fast way for businesses to hire ICT talent.">
+<link rel="canonical" href="https://workley.co.za/how-it-works.html">
+<meta name="robots" content="index,follow">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/icon-blue.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Workley">
+<meta property="og:title" content="How Workley works">
+<meta property="og:description" content="A free stage for student skills, and affordable ICT talent for businesses - working to cut youth unemployment.">
+<meta property="og:url" content="https://workley.co.za/how-it-works.html">
+<meta property="og:image" content="https://workley.co.za/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://workley.co.za/assets/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .hiw-hero{background:linear-gradient(135deg,#2B57DC 0%,#1E3A8A 60%,#122051 100%);color:#fff;padding:74px 0 70px;text-align:center;position:relative;overflow:hidden;}
+  .hiw-hero::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.13) 1px,transparent 1.4px);background-size:24px 24px;opacity:.45;-webkit-mask:linear-gradient(180deg,#000,transparent 85%);mask:linear-gradient(180deg,#000,transparent 85%);}
+  .hiw-hero .wrap{position:relative;z-index:1;}
+  .hiw-glow{position:absolute;width:560px;height:560px;border-radius:50%;top:-40%;left:50%;transform:translateX(-50%);z-index:0;
+    background:radial-gradient(circle,rgba(190,216,255,.5) 0%,transparent 65%);animation:hiwPulse 7s ease-in-out infinite;}
+  @keyframes hiwPulse{0%,100%{opacity:.7;transform:translateX(-50%) scale(1);}50%{opacity:1;transform:translateX(-50%) scale(1.08);}}
+  .hiw-eyebrow{display:inline-block;font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#bcd2ff;margin-bottom:14px;}
+  .hiw-hero h1{color:#fff;font-size:clamp(2.1rem,5vw,3.3rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;}
+  .hiw-hero p{color:rgba(255,255,255,.88);font-size:1.12rem;max-width:50ch;margin:18px auto 0;line-height:1.55;}
+  .hiw-back{position:absolute;top:18px;left:0;right:0;}
+  .hiw-back a{display:inline-flex;align-items:center;gap:7px;color:rgba(255,255,255,.85);text-decoration:none;font-weight:600;font-size:.9rem;}
+  .hiw-back a:hover{color:#fff;}
+
+  .hiw-section{padding:60px 0;}
+  .hiw-section.alt{background:var(--grey-bg,#F6F7F9);}
+  .hiw-head{text-align:center;max-width:60ch;margin:0 auto 44px;}
+  .hiw-tag{display:inline-flex;align-items:center;gap:7px;font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:.82rem;color:var(--blue);background:var(--blue-50);padding:.32rem .8rem;border-radius:99px;margin-bottom:14px;}
+  .hiw-head h2{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:clamp(1.6rem,3.4vw,2.3rem);letter-spacing:-.025em;color:var(--ink);}
+  .hiw-head p{color:var(--muted);font-size:1.02rem;margin-top:10px;line-height:1.55;}
+
+  /* Problem statement */
+  .hiw-problem{max-width:760px;margin:0 auto;text-align:center;}
+  .hiw-problem p{font-size:1.12rem;line-height:1.7;color:var(--ink-soft);margin-bottom:18px;}
+  .hiw-problem strong{color:var(--ink);font-weight:700;}
+
+  .hiw-steps{display:flex;flex-direction:column;gap:20px;max-width:780px;margin:0 auto;}
+  .hiw-step{display:flex;gap:22px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:18px;padding:24px 26px;
+    box-shadow:0 1px 2px rgba(13,27,42,.04);opacity:0;transform:translateY(26px);transition:opacity .6s var(--ease),transform .6s var(--ease);}
+  .hiw-step.in{opacity:1;transform:none;}
+  .hiw-step:nth-child(even){flex-direction:row-reverse;}
+  .hiw-illo{width:120px;height:120px;flex-shrink:0;border-radius:18px;background:linear-gradient(135deg,#EDF2FE,#dce7ff);display:grid;place-items:center;}
+  .hiw-illo svg{width:62px;height:62px;}
+  .hiw-step-body{flex:1;}
+  .hiw-num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:var(--blue);color:#fff;font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:.92rem;margin-bottom:10px;}
+  .hiw-step-body h3{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:1.2rem;color:var(--ink);}
+  .hiw-step-body p{color:var(--ink-soft);font-size:.96rem;line-height:1.55;margin-top:6px;}
+
+  /* Bigger-goal band */
+  .hiw-goal{position:relative;overflow:hidden;background:radial-gradient(120% 130% at 50% -20%,#1a2a64 0%,#0B1020 60%);color:#fff;text-align:center;padding:78px 20px;}
+  .hiw-goal .hiw-glow{top:auto;bottom:-46%;opacity:.55;}
+  .hiw-goal .wrap{position:relative;z-index:1;max-width:720px;}
+  .hiw-goal .gtag{display:inline-block;font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#9db4ff;margin-bottom:16px;}
+  .hiw-goal h2{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:clamp(1.7rem,4vw,2.6rem);letter-spacing:-.03em;line-height:1.1;color:#fff;}
+  .hiw-goal p{color:rgba(255,255,255,.8);font-size:1.1rem;line-height:1.65;margin-top:18px;}
+
+  .hiw-trust{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:880px;margin:0 auto;}
+  .hiw-trust-item{background:#fff;border:1px solid var(--border);border-radius:16px;padding:22px;text-align:center;opacity:0;transform:translateY(22px);transition:opacity .6s var(--ease),transform .6s var(--ease);}
+  .hiw-trust-item.in{opacity:1;transform:none;}
+  .hiw-trust-item .ti{width:46px;height:46px;border-radius:13px;background:var(--blue-50);color:var(--blue);display:grid;place-items:center;margin:0 auto 12px;}
+  .hiw-trust-item .ti svg{width:23px;height:23px;}
+  .hiw-trust-item h4{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:1rem;color:var(--ink);}
+  .hiw-trust-item p{color:var(--muted);font-size:.86rem;margin-top:6px;line-height:1.5;}
+
+  .hiw-cta{text-align:center;padding:64px 20px;}
+  .hiw-cta h2{font-family:"Plus Jakarta Sans",sans-serif;font-weight:800;font-size:clamp(1.6rem,3.6vw,2.4rem);letter-spacing:-.025em;color:var(--ink);}
+  .hiw-cta p{color:var(--muted);margin:12px auto 24px;max-width:46ch;line-height:1.55;}
+  .hiw-cta-btns{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;}
+
+  @media(max-width:680px){
+    .hiw-step,.hiw-step:nth-child(even){flex-direction:column;text-align:center;gap:16px;padding:22px;}
+    .hiw-trust{grid-template-columns:1fr;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .hiw-step,.hiw-trust-item{opacity:1;transform:none;transition:none;}
+    .hiw-glow{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="siteNav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="Workley home"><span class="dot"><span class="dot-bg"></span><span class="dot-txt">W</span></span><span class="brand-name">Workley</span></a>
+    <nav class="nav-links" aria-label="Primary">
+      <a class="link" href="index.html#how">How it works</a>
+      <a class="link" href="catalog.html">Find talent</a>
+      <a class="link" href="mission.html">Our mission</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-primary btn-sm" href="index.html#signup">Get started</a>
+    </div>
+  </div>
+</header>
+
+<section class="hiw-hero">
+  <div class="hiw-glow" aria-hidden="true"></div>
+  <div class="hiw-back"><div class="wrap"><a href="index.html"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Workley</a></div></div>
+  <div class="wrap">
+    <span class="hiw-eyebrow">Why Workley exists</span>
+    <h1>Where student skills<br>meet real opportunity.</h1>
+    <p>Workley helps South Africa's university ICT students get seen, get hired and earn - while giving businesses fast, affordable access to fresh talent.</p>
+  </div>
+</section>
+
+<!-- THE PROBLEM -->
+<section class="hiw-section">
+  <div class="wrap">
+    <div class="hiw-head">
+      <span class="hiw-tag">The problem we're solving</span>
+      <h2>Talented students, hidden in plain sight</h2>
+    </div>
+    <div class="hiw-problem reveal">
+      <p>South Africa has thousands of bright, hardworking university ICT students. The problem isn't a lack of skill - it's a lack of <strong>exposure</strong>. Most never get a real chance to show employers what they can do, so their talent goes unseen and they stay underemployed.</p>
+      <p>For underprivileged students it's even harder. Money is tight, the right connections aren't there, and staying in university becomes a struggle - even when the ability clearly is. <strong>Workley exists to change that</strong> by giving every student a free stage to prove themselves.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOR STUDENTS -->
+<section class="hiw-section alt">
+  <div class="wrap">
+    <div class="hiw-head">
+      <span class="hiw-tag">For students &amp; graduates</span>
+      <h2>A free stage for your skills</h2>
+      <p>Show what you can do, on a fair playing field - and earn while you're at it.</p>
+    </div>
+    <div class="hiw-steps">
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">1</span><h3>Show what you can do - for free</h3><p>Create a verified profile and put your real skills in front of employers. It's free, and talent from every background gets the same stage - no connections needed.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">2</span><h3>Compete only with your peers</h3><p>You're matched against other South African university ICT students - not seasoned freelancers from around the world. A fair shot, judged purely on your skill.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5 9 9z"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">3</span><h3>Take control of your future</h3><p>Choose the work you want, set your own rate, and build a reputation that's yours to keep. You're in charge of your own opportunities.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">4</span><h3>Earn while you study or job-hunt</h3><p>Make real money during your studies or between applications - income that helps you stay in school. And as clients discover and hire you, you build the experience that leads to formal work.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR CLIENTS -->
+<section class="hiw-section">
+  <div class="wrap">
+    <div class="hiw-head">
+      <span class="hiw-tag">For clients &amp; SMEs</span>
+      <h2>ICT help that fits your budget</h2>
+      <p>Get quality work done by capable students - quickly, and at a price that suits a growing business.</p>
+    </div>
+    <div class="hiw-steps">
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h.01M18 12h.01"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">1</span><h3>Talent that fits your budget</h3><p>Websites, apps, data, IT support and more - done by skilled students at rates that work for a small or growing business. Quality ICT help, without the big-agency price tag.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">2</span><h3>Find the right talent fast</h3><p>Smart Match surfaces the best-fit students for your project in minutes. Less time searching, more time building your business.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.5a8.5 8.5 0 11-8.5-8.5"/><path d="M22 4l-9 9-3-3"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">3</span><h3>Hire skilled people, quicker</h3><p>Recruit promising students fast and grow your team without the cost and delay of traditional hiring - so your business can move ahead sooner.</p></div>
+      </div>
+      <div class="hiw-step reveal">
+        <div class="hiw-illo"><svg viewBox="0 0 24 24" fill="none" stroke="#2D5BE0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+        <div class="hiw-step-body"><span class="hiw-num">4</span><h3>Manage it all in one place</h3><p>Message, meet, onboard and track your students from a single dashboard - so running a project stays simple from start to finish.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE BIGGER GOAL -->
+<section class="hiw-goal">
+  <div class="hiw-glow" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="gtag">Our bigger goal</span>
+    <h2>A real dent in youth unemployment</h2>
+    <p>Every student who earns, every business that grows, and every skill that finally gets seen is a step toward our main goal: lowering South Africa's youth unemployment rate. When skill meets opportunity, everyone moves forward.</p>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="hiw-section alt">
+  <div class="wrap">
+    <div class="hiw-head"><span class="hiw-tag">Built on trust</span><h2>Safe for everyone</h2></div>
+    <div class="hiw-trust">
+      <div class="hiw-trust-item reveal"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h4>Verified profiles</h4><p>Email verification and reviews keep the marketplace credible.</p></div>
+      <div class="hiw-trust-item reveal"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg></div><h4>ID-verified talent</h4><p>Every professional's identity is verified via Home Affairs before they can be hired.</p></div>
+      <div class="hiw-trust-item reveal"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></div><h4>POPIA-aligned</h4><p>Your personal information is handled in line with South Africa's POPIA.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="hiw-cta">
+  <div class="wrap">
+    <h2>Be part of the change</h2>
+    <p>Whether you're a student ready to prove yourself or a business ready to grow - it's free to start.</p>
+    <div class="hiw-cta-btns">
+      <a class="btn btn-primary btn-lg" href="index.html#signup">Get started</a>
+      <a class="btn btn-outline btn-lg" href="mission.html">Our mission</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-bottom"><span>© 2026 Workley (Pty) Ltd · South Africa</span><span class="meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/></svg>POPIA-aligned</span></div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els=document.querySelectorAll('.reveal');
+    if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); } });
+    },{threshold:.18});
+    els.forEach(function(e){ io.observe(e); });
+  })();
+</script>
+</body>
+</html>

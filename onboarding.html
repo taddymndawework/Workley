@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2B57DC">
+<title>Set up your profile · Workley</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/icon-blue.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --blue:#2D5BE0; --blue-50:#EDF2FE; --blue-100:#D9E3FC; --blue-600:#2247B5;
+    --ink:#0D1B2A; --ink-soft:#1F2937; --muted:#6B7280;
+    --border:#E5E7EB; --border-2:#D1D5DB; --grey-50:#F9FAFB; --grey-100:#F3F4F6;
+    --red:#EF4444; --red-50:#FEF2F2;
+    --ease:cubic-bezier(.16,1,.3,1);
+    --radius:14px; --radius-sm:10px;
+  }
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--grey-50);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    overflow-x:hidden;
+  }
+
+  /* ── Top bar ── */
+  .ob-top{
+    background:#fff; border-bottom:1px solid var(--border);
+    padding:14px 28px; display:flex; align-items:center; gap:18px;
+  }
+  /* One-time desktop nudge (shown on small screens only) */
+  .ob-desktop-tip{
+    display:flex; align-items:center; gap:10px;
+    background:var(--blue-50); color:var(--blue-600);
+    border-bottom:1px solid var(--blue-100);
+    padding:10px 16px; font-size:.84rem; line-height:1.35;
+  }
+  .ob-desktop-tip[hidden]{display:none;}  /* author display:flex would otherwise override the hidden attribute */
+  .ob-desktop-tip svg{width:18px;height:18px;flex-shrink:0;}
+  .ob-desktop-tip span{flex:1;}
+  .ob-tip-x{
+    flex-shrink:0; background:transparent; border:0; cursor:pointer;
+    color:var(--blue-600); font-size:1.3rem; line-height:1; padding:0 4px;
+    border-radius:6px; opacity:.7; transition:opacity .15s;
+  }
+  .ob-tip-x:hover{opacity:1;}
+  .ob-brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-.01em;}
+  .ob-mark{width:30px;height:30px;border-radius:8px;background:var(--blue);color:#fff;
+    display:grid;place-items:center;font-weight:800;font-size:.72rem;letter-spacing:-.01em;}
+  .ob-progress-wrap{flex:1;max-width:520px;}
+  .ob-progress-meta{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:4px;font-weight:500;}
+  .ob-progress-meta strong{color:var(--ink);font-weight:600;}
+  .ob-progress{height:6px;background:var(--grey-100);border-radius:3px;overflow:hidden;}
+  .ob-progress-bar{height:100%;background:var(--blue);width:0;border-radius:3px;
+    transition:width .42s var(--ease);}
+  .ob-exit{margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);
+    padding:8px 14px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;
+    font-size:.84rem;cursor:pointer;transition:border-color .15s,color .15s;}
+  .ob-exit:hover{border-color:var(--border-2);color:var(--ink);}
+
+  /* ── Main layout ── */
+  main{flex:1;display:flex;align-items:center;justify-content:center;padding:36px 24px;}
+  .ob-card{
+    background:#fff; border:1px solid var(--border); border-radius:18px;
+    width:100%; max-width:980px;
+    box-shadow:0 6px 28px rgba(13,27,42,.06);
+    overflow:hidden;
+    display:grid; grid-template-columns:.95fr 1.1fr;
+    min-height:560px;
+  }
+
+  /* ── Left side (illustration + heading) ── */
+  .ob-left{
+    background:linear-gradient(155deg,var(--ink) 0%, #14233A 60%, #1B305A 100%);
+    color:#fff; padding:44px 38px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    position:relative; overflow:hidden;
+  }
+  .ob-left::before{
+    content:''; position:absolute; top:-80px; right:-80px;
+    width:280px; height:280px; border-radius:50%;
+    background:radial-gradient(circle,rgba(45,91,224,.35),transparent 70%);
+    pointer-events:none;
+  }
+  .ob-step-num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.78rem;
+    color:#8fa9f3;letter-spacing:.06em;text-transform:uppercase;}
+  .ob-left h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;
+    font-size:1.85rem;line-height:1.2;letter-spacing:-.02em;margin-top:10px;}
+  .ob-left p{color:rgba(255,255,255,.78);margin-top:12px;font-size:.95rem;line-height:1.6;}
+  .ob-illo{margin-top:auto; padding-top:28px; position:relative; z-index:1;}
+  .ob-illo svg{width:100%; max-width:280px; height:auto; display:block; margin:0 auto;}
+
+  /* ── Right side (form) ── */
+  .ob-right{padding:46px 44px; display:flex; flex-direction:column; min-width:0;}
+  .ob-right h2{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;
+    font-size:1.42rem;letter-spacing:-.015em;}
+  .ob-hint{color:var(--muted);font-size:.92rem;margin-top:8px;line-height:1.55;}
+  .ob-body{margin-top:26px;flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;}
+
+  /* ── Option cards (single-select grid) ── */
+  .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .opt-grid.one-col{grid-template-columns:1fr;}
+  .opt{
+    border:1.6px solid var(--border); border-radius:var(--radius-sm);
+    padding:14px 14px; cursor:pointer; display:flex; align-items:center; gap:12px;
+    font-weight:500; font-size:.93rem; color:var(--ink); background:#fff;
+    transition:border-color .15s,background .15s,transform .12s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .opt .oi{width:34px;height:34px;border-radius:8px;background:var(--blue-50);color:var(--blue);
+    display:grid;place-items:center;flex-shrink:0;}
+  .opt .oi svg{width:18px;height:18px;}
+  .opt .ot strong{display:block;font-weight:600;font-size:.95rem;color:var(--ink);}
+  .opt .ot em{display:block;font-style:normal;font-size:.78rem;color:var(--muted);margin-top:2px;}
+  .opt:hover{border-color:var(--blue-100);}
+  .opt.sel{border-color:var(--blue);background:var(--blue-50);}
+  .opt.sel .oi{background:var(--blue);color:#fff;}
+
+  /* ── Skill chips ── */
+  .skill-pick{display:flex;flex-wrap:wrap;gap:8px;}
+  .spill{
+    background:#fff;border:1.5px solid var(--border);color:var(--ink);
+    padding:.5em 1em;border-radius:20px;cursor:pointer;font-size:.85rem;font-weight:500;
+    font-family:'Inter',sans-serif;transition:all .15s;-webkit-tap-highlight-color:transparent;
+  }
+  .spill:hover{border-color:var(--blue-100);}
+  .spill.sel{background:var(--blue);color:#fff;border-color:var(--blue);}
+  .spill-disabled{opacity:.4;cursor:not-allowed;}
+  .spill-disabled:hover{border-color:var(--border);}
+
+  /* ── Form fields ── */
+  .form-field{margin-bottom:14px;}
+  .form-field label{display:block;font-family:'Plus Jakarta Sans',sans-serif;
+    font-weight:600;font-size:.82rem;color:var(--ink);margin-bottom:6px;}
+  .form-field input,.form-field select,.form-field textarea{
+    width:100%;border:1.5px solid var(--border);border-radius:10px;
+    padding:.6rem .85rem;font-size:.93rem;font-family:'Inter',sans-serif;
+    color:var(--ink);outline:none;transition:border-color .15s;background:#fff;
+  }
+  .form-field textarea{resize:vertical;min-height:120px;line-height:1.55;}
+  .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--blue);}
+  .form-field .help{font-size:.76rem;color:var(--muted);margin-top:4px;}
+  .errmsg{display:none;font-size:.76rem;color:var(--red);margin-top:5px;font-weight:500;}
+  .form-field.err .errmsg{display:block;}
+  .form-field.err input,.form-field.err select,.form-field.err textarea{border-color:var(--red);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .currency-input{position:relative;}
+  /* University / college autocomplete */
+  .uni-ac{position:relative;}
+  .uni-hint{font-size:.76rem;color:var(--muted);margin-top:5px;}
+  .uni-suggest{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);background:#fff;
+    border:1.5px solid var(--border);border-radius:10px;box-shadow:0 12px 30px rgba(20,33,90,.14);
+    max-height:248px;overflow-y:auto;padding:5px;}
+  .uni-opt{display:block;width:100%;text-align:left;background:transparent;border:0;cursor:pointer;
+    padding:.55rem .7rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:.9rem;color:var(--ink);}
+  .uni-opt:hover,.uni-opt.active{background:var(--blue-50);color:var(--blue);}
+  .currency-input::before{content:'R';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+    color:var(--muted);font-weight:600;font-size:.93rem;pointer-events:none;}
+  .currency-input input{padding-left:28px;}
+
+  /* ── Review screen ── */
+  .review-list{display:flex;flex-direction:column;gap:18px;}
+  .rv-item{padding-bottom:18px;border-bottom:1px solid var(--border);}
+  .rv-item:last-child{border-bottom:none;}
+  .rv-label{font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.78rem;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .rv-value{font-size:.97rem;color:var(--ink);line-height:1.5;}
+  .rv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+  .rv-chip{background:var(--blue-50);color:var(--blue);padding:.25em .7em;border-radius:20px;
+    font-size:.78rem;font-weight:600;}
+
+  /* ── Footer (nav buttons) ── */
+  .ob-foot{
+    margin-top:24px; padding-top:20px; border-top:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+  }
+  .ob-foot .step-tag{font-size:.82rem;color:var(--muted);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:.65rem 1.4rem;border-radius:10px;
+    font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:.93rem;
+    cursor:pointer;border:none;text-decoration:none;
+    transition:background .15s,transform .12s,box-shadow .15s,border-color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-primary{background:var(--blue);color:#fff;box-shadow:0 4px 14px rgba(45,91,224,.25);}
+  .btn-primary:hover{background:var(--blue-600);transform:translateY(-1px);box-shadow:0 6px 18px rgba(45,91,224,.32);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary:disabled{background:var(--border-2);color:#fff;cursor:not-allowed;box-shadow:none;transform:none;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;}
+  .btn-ghost:hover{color:var(--ink);background:var(--grey-100);}
+
+  /* ── Success screen ── */
+  .ob-success{display:none;flex-direction:column;align-items:center;text-align:center;padding:30px 16px;}
+  .ob-success.active{display:flex;}
+  .ob-success .anim-wrap{position:relative;width:160px;height:160px;margin-bottom:24px;
+    animation:float 3.5s ease-in-out 2.4s infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .ob-success .anim-wrap::before{content:'';position:absolute;inset:-22px;border-radius:50%;
+    background:radial-gradient(circle,rgba(45,91,224,.22) 0%,transparent 68%);
+    opacity:0;animation:glowPulse 2.6s ease-in-out 2s infinite;}
+  @keyframes glowPulse{0%,100%{opacity:0;transform:scale(.8)}50%{opacity:1;transform:scale(1.12)}}
+  .ob-success .check-svg{display:block;width:100%;height:auto;overflow:visible;
+    animation:popIn .55s cubic-bezier(.34,1.56,.64,1) .1s both;}
+  @keyframes popIn{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+  .ob-success .ring{stroke-dasharray:503;stroke-dashoffset:503;
+    animation:drawRing .85s cubic-bezier(.4,0,.2,1) .45s forwards;}
+  @keyframes drawRing{to{stroke-dashoffset:0}}
+  .ob-success .tick{stroke-dasharray:108;stroke-dashoffset:108;
+    animation:drawTick .45s cubic-bezier(.4,0,.2,1) 1.3s forwards;}
+  @keyframes drawTick{to{stroke-dashoffset:0}}
+  .ob-success h1{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;
+    font-size:clamp(1.5rem,4vw,2rem);letter-spacing:-.02em;
+    animation:fadeUp .5s ease 1.5s both;margin-bottom:10px;}
+  .ob-success p{color:var(--muted);font-size:.96rem;line-height:1.6;max-width:380px;
+    animation:fadeUp .5s ease 1.65s both;margin-bottom:28px;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+  .ob-success-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;animation:fadeUp .5s ease 1.8s both;}
+  .ob-success .btn{animation:fadeUp .5s ease 1.8s both;}
+  @media(max-width:480px){.ob-success-cta{flex-direction:column;width:100%;max-width:300px;}.ob-success-cta .btn{width:100%;}}
+
+  /* ── Step animation ── */
+  .ob-step{display:none;animation:stepIn .35s var(--ease) both;}
+  .ob-step.active{display:block;}
+  @keyframes stepIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ── Tablet ── */
+  @media(max-width:780px){
+    .ob-top{padding:12px 16px;gap:10px;flex-wrap:nowrap;}
+    .ob-brand .brand-name{display:none;}
+    .ob-exit{padding:6px 10px;font-size:.76rem;}
+    main{padding:16px 12px 24px;}
+    .ob-card{grid-template-columns:1fr;min-height:auto;border-radius:14px;}
+    .ob-left{padding:22px 22px 16px;}
+    .ob-left::before{display:none;}
+    .ob-left h1{font-size:1.3rem;line-height:1.25;}
+    .ob-left p{font-size:.86rem;margin-top:8px;}
+    .ob-illo{display:none;}
+    .ob-right{padding:24px 22px 24px;}
+    .ob-right h2{font-size:1.18rem;line-height:1.3;}
+    .ob-hint{font-size:.88rem;}
+    .ob-body{margin-top:20px;}
+    .opt-grid{grid-template-columns:1fr;gap:8px;}
+    .opt{padding:13px 13px;}
+    .opt .oi{width:32px;height:32px;}
+    .opt .ot strong{font-size:.92rem;}
+    .opt .ot em{font-size:.75rem;}
+    .form-row{grid-template-columns:1fr;gap:0;}
+    .ob-foot{margin-top:18px;padding-top:16px;gap:8px;}
+    .ob-foot .step-tag{display:none;}
+    .ob-foot .btn{padding:.6rem 1rem;font-size:.86rem;flex:1;}
+    .ob-progress-meta{font-size:.72rem;}
+    .ob-progress-meta span:last-child{max-width:38%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .rv-item{padding-bottom:14px;}
+    .rv-value{font-size:.92rem;}
+    .form-field textarea{min-height:100px;}
+  }
+  /* ── Phone (small) ── */
+  @media(max-width:420px){
+    .ob-top{padding:10px 12px;}
+    .ob-exit{padding:5px 9px;font-size:.72rem;}
+    .ob-left{padding:18px 18px 14px;}
+    .ob-left h1{font-size:1.18rem;}
+    .ob-right{padding:20px 18px 22px;}
+    .ob-right h2{font-size:1.08rem;}
+    .opt{padding:11px 12px;gap:10px;}
+    .spill{font-size:.8rem;padding:.42em .85em;}
+    .ob-foot .btn{padding:.55rem .8rem;font-size:.82rem;gap:4px;}
+    .ob-progress-wrap{min-width:0;}
+  }
+
+  /* Portfolio upload step */
+  .pf-up-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+  /* Username input */
+  .un-input{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;background:#fff;overflow:hidden;transition:border-color .15s;}
+  .un-input:focus-within{border-color:var(--blue);}
+  .un-at{padding:0 4px 0 12px;color:var(--muted);font-weight:600;}
+  .un-input input{flex:1;min-width:0;border:0;outline:0;padding:.7rem .6rem;font-family:inherit;font-size:1rem;color:var(--ink);background:transparent;}
+  .un-status{font-size:.8rem;margin-top:7px;min-height:1.1em;color:var(--muted);}
+  .un-status.good{color:#15803d;}
+  .un-status.bad{color:var(--red);}
+  .un-status.checking{color:var(--muted);}
+  .pf-up-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);
+    border-radius:10px;background:var(--grey-50);}
+  .pf-up-thumb{width:34px;height:34px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--grey-100);}
+  .pf-up-ic{width:34px;height:34px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;
+    background:var(--blue-50);color:var(--blue);}
+  .pf-up-name{flex:1;min-width:0;font-size:.85rem;font-weight:500;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;}
+  .pf-up-status{font-size:.76rem;color:var(--muted);}
+  .pf-up-open{flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:transparent;border:0;
+    padding:0;margin:0;cursor:pointer;font-family:inherit;}
+  /* Uploaded-file preview lightbox */
+  .ob-doc-preview{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:rgba(13,20,40,.62);opacity:0;transition:opacity .2s ease;}
+  .ob-doc-preview.show{opacity:1;}
+  .obdp-box{display:flex;flex-direction:column;width:min(900px,96vw);height:min(86vh,900px);background:#fff;
+    border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(8,15,40,.45);}
+  .obdp-top{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--border);background:var(--grey-50);}
+  .obdp-name{flex:1;min-width:0;font-weight:600;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .obdp-open{font-size:.82rem;font-weight:600;color:var(--blue);text-decoration:none;white-space:nowrap;}
+  .obdp-x{flex-shrink:0;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--ink-soft);font-size:1.4rem;line-height:1;cursor:pointer;}
+  .obdp-img{flex:1;min-height:0;width:100%;object-fit:contain;background:#10141f;}
+  .obdp-frame{flex:1;min-height:0;width:100%;border:0;background:#fff;}
+  .pf-up-del{background:none;border:none;color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;
+    width:26px;height:26px;border-radius:50%;flex-shrink:0;}
+  .pf-up-del:hover{background:var(--grey-100);color:var(--red);}
+  .pf-up-spin{width:18px;height:18px;border:2.5px solid var(--blue-50);border-top-color:var(--blue);
+    border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+  .pf-add-btn{display:inline-flex;align-items:center;gap:7px;padding:.6rem 1rem;border:1.5px dashed var(--border-2);
+    background:#fff;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.85rem;
+    color:var(--blue);cursor:pointer;transition:border-color .15s,background .15s;}
+  .pf-add-btn:hover{border-color:var(--blue);background:var(--blue-50);}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* Brand wordmark logo (blue, on the white top bar) */
+  .ob-brand{width:118px;height:28px;gap:0;background:url('assets/logo-blue.png') no-repeat left center;background-size:auto 28px;}
+  .ob-brand > *{display:none;}
+</style>
+</head>
+<body>
+
+<div class="ob-top">
+  <a href="index.html" class="ob-brand">
+    <div class="ob-mark">W</div>
+    <span class="brand-name">Workley</span>
+  </a>
+  <div class="ob-progress-wrap">
+    <div class="ob-progress-meta"><span>Step <strong id="stepNow">1</strong> of <strong id="stepTotal">6</strong></span><span id="stepLabel">Getting started</span></div>
+    <div class="ob-progress"><div class="ob-progress-bar" id="progBar"></div></div>
+  </div>
+  <button class="ob-exit" onclick="exitOnboarding()">Save &amp; exit</button>
+</div>
+
+<!-- One-time tip (mobile only): nudge users to set up on a larger screen -->
+<div class="ob-desktop-tip" id="desktopTip" role="note" hidden>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+  <span>For the best experience, set up your profile on a desktop or laptop.</span>
+  <button type="button" class="ob-tip-x" onclick="dismissDesktopTip()" aria-label="Dismiss">&times;</button>
+</div>
+<script>
+  // Shared one-time desktop nudge (key shared with the dashboard, so it appears
+  // once total). Triggered from the auth handler below - only once we know the
+  // user is signed in and staying to set up their profile (not being redirected).
+  window.dismissDesktopTip = function(){ var t=document.getElementById('desktopTip'); if(t) t.hidden=true; try{ localStorage.setItem('workley_desktop_tip','1'); }catch(e){} };
+  window._maybeDesktopTip = function(){
+    try{
+      if(localStorage.getItem('workley_desktop_tip')) return;
+      if(!window.matchMedia || !window.matchMedia('(max-width: 820px)').matches) return;
+      var t=document.getElementById('desktopTip');
+      if(t){ t.hidden=false; localStorage.setItem('workley_desktop_tip','1'); }
+    }catch(e){}
+  };
+</script>
+
+<main>
+  <div class="ob-card">
+
+    <!-- Left: illustration + heading -->
+    <div class="ob-left">
+      <div>
+        <div class="ob-step-num" id="leftStepNum">Step 1</div>
+        <h1 id="leftTitle">Tell us about you</h1>
+        <p id="leftBlurb">Just a few quick questions so we can match you with the right opportunities.</p>
+      </div>
+      <div class="ob-illo" id="illoMount"></div>
+    </div>
+
+    <!-- Right: question/form content -->
+    <div class="ob-right">
+
+      <!-- Steps inserted dynamically -->
+      <div id="stepsMount" class="ob-body"></div>
+
+      <!-- Success state (post-finish) -->
+      <div id="successView" class="ob-success">
+        <div class="anim-wrap">
+          <svg class="check-svg" viewBox="0 0 190 190" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="95" cy="95" r="80" fill="none" stroke="#2D5BE0" stroke-width="7" opacity=".12"/>
+            <circle class="ring" cx="95" cy="95" r="80" fill="none" stroke="#2D5BE0" stroke-width="7" stroke-linecap="round" transform="rotate(-90 95 95)"/>
+            <circle cx="95" cy="95" r="73" fill="#EDF2FE" opacity="0" style="animation:fadeUp .3s ease 1.2s forwards"/>
+            <path class="tick" d="M57 95 L80 118 L133 65" fill="none" stroke="#2D5BE0" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h1 id="successTitle">You're all set!</h1>
+        <p id="successMsg">Your Workley profile is ready. Take a look or jump straight into the marketplace.</p>
+        <div class="ob-success-cta">
+          <button class="btn btn-primary" onclick="goToDashboard()">Go to dashboard →</button>
+          <button class="btn btn-outline" onclick="goToProfile()">View my profile</button>
+        </div>
+      </div>
+
+      <!-- Footer nav -->
+      <div class="ob-foot" id="obFoot">
+        <button class="btn btn-ghost" id="backBtn" onclick="prevStep()">← Back</button>
+        <span class="step-tag" id="stepTag"></span>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ────────────────────────────────────────────────────────────────────
+  // Onboarding state - kept in memory, persisted to localStorage on save
+  // ────────────────────────────────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  let ROLE = params.get('role') || localStorage.getItem('workley_onboarding_role') || 'talent';
+  if(ROLE !== 'talent' && ROLE !== 'client') ROLE = 'talent';
+  localStorage.setItem('workley_onboarding_role', ROLE);
+
+  // Profile state - restored from localStorage if a draft exists
+  let profile = {
+    role: ROLE,
+    username: '',
+    // talent
+    field: null, status: null, experience: null,
+    university: '', course: '', gradYear: '', degreeYear: '', startYear: '',
+    skills: [],
+    title: '', rate: '', bio: '',
+    softSkills: [], hobbies: '',
+    avatar: null,
+    // talent portfolio / extras
+    website: '', certifications: '', workExperience: '', portfolio: [],
+    // client
+    clientType: null, needs: [], timing: null,
+    orgName: '', industry: '', location: '',
+    description: ''
+  };
+  const draftKey = 'workley_onboarding_draft_' + ROLE;
+  try {
+    const draft = localStorage.getItem(draftKey);
+    if(draft) Object.assign(profile, JSON.parse(draft));
+  } catch(e){}
+  // Drop any portfolio entries that never finished uploading (no url).
+  if(Array.isArray(profile.portfolio)) profile.portfolio = profile.portfolio.filter(f => f && f.url);
+
+  function saveDraft(){
+    try { localStorage.setItem(draftKey, JSON.stringify(profile)); } catch(e){}
+  }
+
+  // ── Username (unique @handle, Instagram-style rules) ──
+  let _usernameOk = null;     // true=available, false=invalid/taken, null=unchecked
+  let _usernameTimer = null;
+  function _validUsernameFormat(u){
+    if(!/^[a-z0-9._]{3,30}$/.test(u)) return false;   // letters, numbers, . and _ only
+    if(u[0]==='.' || u[u.length-1]==='.') return false; // no leading/trailing dot
+    if(u.indexOf('..') >= 0) return false;              // no consecutive dots
+    return true;
+  }
+  function stepUsername(){
+    // Returning to this step with a valid handle already chosen → keep Continue enabled.
+    if(profile.username && _validUsernameFormat(profile.username) && _usernameOk===null) _usernameOk = true;
+    return {
+      h2:'Choose your username',
+      hint:'Your unique @handle on Workley - people find and identify you by it. You can change it later (once a month).',
+      html:`
+        <div class="form-field" id="un-field">
+          <label for="obUsername">Username</label>
+          <div class="un-input"><span class="un-at">@</span><input id="obUsername" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="30" placeholder="yourname" value="${escAttr(profile.username||'')}" oninput="onUsernameInput(this.value)"></div>
+          <div class="un-status" id="unStatus"></div>
+          <div class="errmsg">Pick a valid, available username.</div>
+        </div>`
+    };
+  }
+  window.onUsernameInput = function(raw){
+    const u = String(raw||'').trim().toLowerCase();
+    profile.username = u; saveDraft();
+    const statusEl = document.getElementById('unStatus');
+    const nextBtn = document.getElementById('nextBtn');
+    _usernameOk = null; if(nextBtn) nextBtn.disabled = true;
+    clearTimeout(_usernameTimer);
+    if(!statusEl) return;
+    if(!u){ statusEl.textContent=''; statusEl.className='un-status'; return; }
+    if(!_validUsernameFormat(u)){
+      statusEl.textContent='3-30 chars: letters, numbers, . or _ (no leading/trailing or double dots).';
+      statusEl.className='un-status bad'; _usernameOk=false; return;
+    }
+    statusEl.textContent='Checking availability…'; statusEl.className='un-status checking';
+    _usernameTimer = setTimeout(async ()=>{
+      let ownerUid=null, errored=false;
+      try { ownerUid = window._checkUsernameAvail ? await window._checkUsernameAvail(u) : null; }
+      catch(e){ errored=true; }
+      if(profile.username !== u) return;   // input changed while we were checking
+      const el=document.getElementById('unStatus'); if(!el) return;
+      if(!errored && ownerUid && ownerUid !== window._currentUid){
+        el.textContent='@'+u+' is taken - try another.'; el.className='un-status bad'; _usernameOk=false;
+      } else {
+        el.textContent='@'+u+' is available'; el.className='un-status good'; _usernameOk=true;
+      }
+      const nb=document.getElementById('nextBtn'); if(nb && STEPS[stepIndex]) nb.disabled = !STEPS[stepIndex].validate();
+    }, 450);
+  };
+
+  // ── Categories (mirrors app.js) ──
+  // South African universities, private higher-ed institutions & TVET colleges.
+  const SA_INSTITUTIONS = [
+    'University of Cape Town','University of Fort Hare','University of the Free State',
+    'University of KwaZulu-Natal','University of Limpopo','North-West University',
+    'University of Pretoria','Rhodes University','Stellenbosch University',
+    'University of the Western Cape','University of the Witwatersrand','University of Johannesburg',
+    'Nelson Mandela University','University of South Africa','University of Venda',
+    'Walter Sisulu University','Cape Peninsula University of Technology','Central University of Technology',
+    'Durban University of Technology','Mangosuthu University of Technology','Tshwane University of Technology',
+    'Vaal University of Technology','Sol Plaatje University','University of Mpumalanga',
+    'Varsity College','Monash South Africa (now IIE MSA)','Pearson Institute of Higher Education',
+    'Richfield Graduate Institute of Technology','Boston City Campus and Business College','Damelin',
+    'CTI Education Group','Milpark Education','Management College of Southern Africa (MANCOSA)',
+    'Regenesys Business School','AFDA (The School for the Creative Economy)','Academy of Sound Engineering',
+    'IMM Graduate School of Marketing','ETA College','Rosebank College','Stenden South Africa',
+    'Helderberg College','Embury Institute for Higher Education','South African Theological Seminary',
+    'Cornerstone Institute','Regent Business School','Eduvos',
+    'Foundation for Professional Development (FPD)','Academy of Digital Arts','CityVarsity',
+    'Oakfields College','Concept Interactive','Academy of Learning',
+    // TVET colleges
+    'Boland College','Buffalo City College','Capricorn College','Central Johannesburg College',
+    'Coastal KZN College','Eastcape Midlands College','Ehlanzeni College','Elangeni College',
+    'Esayidi College','False Bay College','Flavius Mareka College','Gert Sibande College',
+    'Goldfields College','Ikhala College','King Hintsa College','King Sabata Dalindyebo College',
+    'Lephalale College','Letaba College','Lovedale College','Majuba College','Maluti College',
+    'Mnambithi College','Mopani South East College','Motheo College','Mthashana College',
+    'Nkangala College','Northern Cape Rural College','Northern Cape Urban College','Orbit College',
+    'Port Elizabeth College','Sekhukhune College','South Cape College','South West Gauteng College',
+    'Taletso College','Thekwini College','Tshwane North College','Tshwane South College',
+    'Umfolozi College','Umgungundlovu College','Vhembe College','Vuselela College',
+    'Waterberg College','West Coast College'
+  ];
+  // Common nicknames / abbreviations → canonical institution name.
+  const UNI_ALIASES = {
+    wits:'University of the Witwatersrand', tuks:'University of Pretoria', up:'University of Pretoria',
+    uct:'University of Cape Town', maties:'Stellenbosch University', stellies:'Stellenbosch University',
+    su:'Stellenbosch University', kovsies:'University of the Free State', ufs:'University of the Free State',
+    ukzn:'University of KwaZulu-Natal', nmu:'Nelson Mandela University', nmmu:'Nelson Mandela University',
+    cput:'Cape Peninsula University of Technology', dut:'Durban University of Technology',
+    tut:'Tshwane University of Technology', vut:'Vaal University of Technology',
+    cut:'Central University of Technology', uj:'University of Johannesburg', unisa:'University of South Africa',
+    uwc:'University of the Western Cape', nwu:'North-West University', wsu:'Walter Sisulu University',
+    ump:'University of Mpumalanga', univen:'University of Venda', ufh:'University of Fort Hare',
+    rhodes:'Rhodes University', ru:'Rhodes University', spu:'Sol Plaatje University',
+    mut:'Mangosuthu University of Technology', ul:'University of Limpopo'
+  };
+
+  const CATEGORIES = [
+    {id:'dev',  name:'Software Development', skills:[
+      'JavaScript','TypeScript','HTML/CSS','React','Vue.js','Angular','Svelte','Next.js','Tailwind CSS',
+      'Node.js','Express','Nest.js','Python','Django','Flask','FastAPI',
+      'Java','Spring Boot','C#/.NET','PHP','Laravel','Ruby on Rails','Go','Rust','Kotlin','Swift',
+      'Flutter','React Native','iOS','Android',
+      'PostgreSQL','MySQL','MongoDB','Redis','SQLite','Firebase',
+      'REST APIs','GraphQL','WebSockets','gRPC',
+      'Git','Docker','CI/CD','Testing (Jest/Pytest)','Agile/Scrum','Code review','System design'
+    ]},
+    {id:'data', name:'Data Science & AI', skills:[
+      'Python','R','SQL','Pandas','NumPy','Matplotlib','Seaborn',
+      'Scikit-learn','TensorFlow','PyTorch','Keras','XGBoost',
+      'Machine Learning','Deep Learning','NLP','Computer Vision','Time-series analysis',
+      'Statistics','Hypothesis testing','A/B testing','Feature engineering',
+      'Power BI','Tableau','Looker','Excel (advanced)',
+      'Data cleaning','ETL pipelines','Airflow','dbt','Apache Spark','Hadoop',
+      'BigQuery','Snowflake','Redshift','Databricks',
+      'MLOps','Model deployment','Prompt engineering','LangChain','RAG'
+    ]},
+    {id:'sec', name:'Cybersecurity', skills:[
+      'Pen-testing','Vulnerability scanning','OWASP Top 10','Burp Suite','Metasploit','Nmap','Wireshark',
+      'SIEM','Splunk','Wazuh','ELK Stack','Incident response','Forensics','Threat hunting','Threat modeling',
+      'Network security','Firewall configuration','VPN','Zero Trust','IDS/IPS',
+      'Cryptography','PKI','OAuth/JWT','SAML','Identity & access management',
+      'Cloud security (AWS/Azure)','Endpoint security','SAST/DAST','Secure code review',
+      'Linux hardening','Windows hardening','Red team / Blue team',
+      'Risk assessment','Compliance (POPIA, ISO 27001, PCI-DSS)','Security awareness training',
+      'CISSP / CEH (in progress)'
+    ]},
+    {id:'cloud', name:'Cloud & DevOps', skills:[
+      'AWS','Azure','GCP','DigitalOcean','Linode',
+      'Docker','Kubernetes','Helm','Docker Compose',
+      'CI/CD','GitHub Actions','GitLab CI','Jenkins','CircleCI',
+      'Terraform','Ansible','Pulumi','CloudFormation','ARM templates',
+      'Linux','Bash scripting','Python scripting','PowerShell',
+      'Prometheus','Grafana','Datadog','New Relic','ELK Stack','Monitoring & alerting',
+      'Nginx','Apache','Load balancing','CDN','Caching',
+      'Serverless (Lambda/Functions)','S3','EC2','RDS','VPC','IAM',
+      'Site reliability engineering','Incident management','On-call'
+    ]},
+    {id:'support', name:'IT Support', skills:[
+      'Troubleshooting','Help desk','Ticketing systems (Zendesk/Jira)','Customer service',
+      'Windows 10/11','macOS','Linux desktop','Chrome OS',
+      'Networking fundamentals','TCP/IP','DNS','DHCP','Wi-Fi configuration',
+      'Active Directory','Group Policy','Office 365 admin','Google Workspace admin',
+      'Hardware repair','Peripheral setup','Printer support',
+      'Remote support tools (TeamViewer/AnyDesk)','VPN setup','SSO setup',
+      'Backup & recovery','Disaster recovery','Patch management','Antivirus / EDR',
+      'Asset & inventory management','SLAs','Documentation','Training end-users',
+      'A+ / Network+ (in progress)'
+    ]},
+    {id:'design', name:'UI/UX & Web Design', skills:[
+      'Figma','Adobe XD','Sketch','InVision','Penpot',
+      'UI design','UX design','Interaction design','Visual design',
+      'Wireframing','Prototyping','Design systems','Component libraries',
+      'User research','Usability testing','User interviews','Personas','Journey mapping',
+      'Accessibility (WCAG)','Inclusive design','Responsive web','Mobile-first design',
+      'HTML/CSS','Tailwind CSS','Webflow','Framer','WordPress',
+      'Adobe Photoshop','Adobe Illustrator','After Effects','Motion design',
+      'Typography','Color theory','Brand identity','Logo design',
+      'UX writing','Microcopy','Design tokens','Information architecture'
+    ]}
+  ];
+  const SOFT_SKILLS = [
+    'Communication','Problem solving','Critical thinking','Teamwork','Leadership',
+    'Time management','Adaptability','Creativity','Emotional intelligence','Conflict resolution',
+    'Active listening','Empathy','Self-motivation','Public speaking','Negotiation',
+    'Decision making','Attention to detail','Patience','Strong work ethic','Collaboration',
+    'Mentoring','Project management','Strategic thinking','Customer focus','Networking',
+    'Presentation skills','Cross-cultural awareness','Resilience','Stress management',
+    'Open-mindedness','Curiosity','Initiative','Accountability','Reliability',
+    'Constructive feedback','Self-awareness','Continuous learning','Storytelling','Persuasion'
+  ];
+  const ICONS = {
+    dev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13 6l-2 12"/></svg>',
+    data:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
+    sec:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+    cloud:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10a4 4 0 00-7.7-1.3A3.5 3.5 0 106 16h11a3.5 3.5 0 001-6.9z"/></svg>',
+    support:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+    design:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="12" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="13" r="2.5"/><path d="M12 22a2 2 0 002-2c0-1.1-.9-2-2-2s-2-.9-2-2a4 4 0 014-4"/></svg>'
+  };
+
+  // ── Illustrations (inline SVG, kept simple) ──
+  const ILLOS = {
+    questions:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b7ee8"/><stop offset="1" stop-color="#2D5BE0"/></linearGradient></defs><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><rect x="74" y="60" width="132" height="100" rx="14" fill="url(#g1)"/><rect x="86" y="80" width="76" height="8" rx="4" fill="rgba(255,255,255,.55)"/><rect x="86" y="96" width="108" height="8" rx="4" fill="rgba(255,255,255,.35)"/><rect x="86" y="112" width="92" height="8" rx="4" fill="rgba(255,255,255,.35)"/><circle cx="200" cy="58" r="22" fill="#fff" stroke="#2D5BE0" stroke-width="3"/><text x="200" y="66" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="22" fill="#2D5BE0">?</text></svg>',
+    education:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><path d="M60 110 L140 75 L220 110 L140 145 Z" fill="#2D5BE0"/><path d="M140 145 L140 175" stroke="#2D5BE0" stroke-width="4" stroke-linecap="round"/><path d="M95 125 L95 155 Q140 175 185 155 L185 125" fill="none" stroke="#5b7ee8" stroke-width="4" stroke-linecap="round"/><circle cx="140" cy="110" r="6" fill="#fff"/></svg>',
+    skills:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><rect x="60" y="60" width="80" height="32" rx="16" fill="#2D5BE0"/><rect x="150" y="60" width="64" height="32" rx="16" fill="#5b7ee8"/><rect x="74" y="100" width="68" height="32" rx="16" fill="#5b7ee8"/><rect x="152" y="100" width="80" height="32" rx="16" fill="#2D5BE0"/><rect x="60" y="140" width="64" height="32" rx="16" fill="#5b7ee8"/><rect x="134" y="140" width="98" height="32" rx="16" fill="#2D5BE0"/></svg>',
+    rate:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><rect x="70" y="70" width="140" height="96" rx="14" fill="#fff" stroke="#2D5BE0" stroke-width="3"/><text x="140" y="125" text-anchor="middle" font-family="Plus Jakarta Sans,sans-serif" font-weight="800" font-size="38" fill="#2D5BE0">R</text><rect x="90" y="138" width="100" height="6" rx="3" fill="#D9E3FC"/><rect x="100" y="150" width="80" height="6" rx="3" fill="#D9E3FC"/></svg>',
+    about:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><circle cx="140" cy="92" r="28" fill="#2D5BE0"/><path d="M88 178 Q88 138 140 138 Q192 138 192 178 Z" fill="#2D5BE0"/><rect x="184" y="58" width="56" height="64" rx="6" fill="#fff" stroke="#5b7ee8" stroke-width="2.5"/><rect x="194" y="72" width="36" height="4" rx="2" fill="#D9E3FC"/><rect x="194" y="82" width="36" height="4" rx="2" fill="#D9E3FC"/><rect x="194" y="92" width="26" height="4" rx="2" fill="#D9E3FC"/></svg>',
+    review:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><rect x="78" y="56" width="124" height="124" rx="12" fill="#fff" stroke="#2D5BE0" stroke-width="3"/><circle cx="140" cy="100" r="22" fill="#2D5BE0"/><path d="M132 100 L138 106 L150 92" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="98" y="134" width="84" height="6" rx="3" fill="#D9E3FC"/><rect x="108" y="148" width="64" height="6" rx="3" fill="#D9E3FC"/><rect x="118" y="162" width="44" height="6" rx="3" fill="#D9E3FC"/></svg>',
+    client:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><rect x="74" y="78" width="132" height="92" rx="10" fill="#fff" stroke="#2D5BE0" stroke-width="3"/><rect x="74" y="78" width="132" height="22" rx="10" fill="#2D5BE0"/><circle cx="86" cy="89" r="3" fill="#fff" opacity=".7"/><circle cx="96" cy="89" r="3" fill="#fff" opacity=".7"/><circle cx="106" cy="89" r="3" fill="#fff" opacity=".7"/><rect x="88" y="116" width="42" height="42" rx="6" fill="#EDF2FE"/><rect x="142" y="116" width="58" height="6" rx="3" fill="#D9E3FC"/><rect x="142" y="130" width="42" height="6" rx="3" fill="#D9E3FC"/><rect x="142" y="146" width="50" height="6" rx="3" fill="#D9E3FC"/></svg>',
+    timing:'<svg viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg"><circle cx="140" cy="118" r="86" fill="rgba(143,169,243,.18)"/><circle cx="140" cy="118" r="60" fill="#fff" stroke="#2D5BE0" stroke-width="4"/><line x1="140" y1="118" x2="140" y2="78" stroke="#2D5BE0" stroke-width="5" stroke-linecap="round"/><line x1="140" y1="118" x2="172" y2="118" stroke="#2D5BE0" stroke-width="4" stroke-linecap="round"/><circle cx="140" cy="118" r="5" fill="#2D5BE0"/></svg>'
+  };
+
+  // ────────────────────────────────────────────────────────────────────
+  // Step definitions
+  // ────────────────────────────────────────────────────────────────────
+  const TALENT_STEPS = [
+    { label:'Username',       illo:'questions',
+      render: stepUsername,     validate: () => _usernameOk === true },
+    { label:'Your focus',     illo:'questions',
+      render: stepField,        validate: () => profile.field != null },
+    { label:'Your status',    illo:'questions',
+      render: stepStatus,       validate: () => profile.status != null },
+    { label:'Experience',     illo:'questions',
+      render: stepExperience,   validate: () => profile.experience != null },
+    { label:'Education',      illo:'education',
+      render: stepEducation,    validate: validateEducation },
+    { label:'Your skills',    illo:'skills',
+      render: stepSkills,       validate: () => profile.skills.length >= 2 && profile.skills.length <= 5 },
+    { label:'Title & rate',   illo:'rate',
+      render: stepTitleRate,    validate: validateTitleRate },
+    { label:'About you',      illo:'about',
+      render: stepBio,          validate: () => profile.bio.trim().length >= 40 },
+    { label:'Soft skills &amp; hobbies',  illo:'skills',
+      render: stepSoftHobbies,  validate: () => profile.softSkills.length >= 2 && profile.softSkills.length <= 5 },
+    { label:'Portfolio &amp; links',  illo:'about',
+      render: stepPortfolio,    validate: () => true },
+    { label:'Review',         illo:'review',
+      render: stepReview,       validate: () => true }
+  ];
+
+  const CLIENT_STEPS = [
+    { label:'Username',       illo:'client',
+      render: stepUsername,     validate: () => _usernameOk === true },
+    { label:'About you',      illo:'client',
+      render: stepClientType,   validate: () => profile.clientType != null },
+    { label:'Your needs',     illo:'skills',
+      render: stepClientNeeds,  validate: () => profile.needs.length >= 1 },
+    { label:'Timing',         illo:'timing',
+      render: stepClientTiming, validate: () => profile.timing != null },
+    { label:'Your details',   illo:'about',
+      render: stepClientDetails, validate: validateClientDetails },
+    { label:'Description',    illo:'about',
+      render: stepClientDescription, validate: () => profile.description.trim().length >= 30 },
+    { label:'Review',         illo:'review',
+      render: stepReview,       validate: () => true }
+  ];
+
+  const STEPS = ROLE === 'talent' ? TALENT_STEPS : CLIENT_STEPS;
+  let stepIndex = 0;
+
+  // ────────────────────────────────────────────────────────────────────
+  // Step renderers
+  // ────────────────────────────────────────────────────────────────────
+  function stepField(){
+    const cards = CATEGORIES.map(c => `
+      <div class="opt ${profile.field===c.id?'sel':''}" data-c="${c.id}" onclick="pickField('${c.id}')">
+        <span class="oi">${ICONS[c.id]}</span>
+        <span class="ot"><strong>${c.name}</strong></span>
+      </div>`).join('');
+    return {
+      h2:'What kind of ICT work are you here to do?',
+      hint:'Pick the field that best matches your skills. You can specialize more in the next step.',
+      html:`<div class="opt-grid">${cards}</div>`
+    };
+  }
+
+  function stepStatus(){
+    const opts = [
+      {v:'student',  label:'Currently studying',  sub:'I\'m enrolled at a university or college'},
+      {v:'grad',     label:'Recent graduate',     sub:'I finished my studies in the last 3 years'}
+    ];
+    return {
+      h2:'Where are you in your journey?',
+      hint:'This helps clients understand your background.',
+      html:`<div class="opt-grid one-col">${opts.map(o=>`
+        <div class="opt ${profile.status===o.v?'sel':''}" onclick="pickStatus('${o.v}')">
+          <span class="oi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <span class="ot"><strong>${o.label}</strong><em>${o.sub}</em></span>
+        </div>`).join('')}</div>`
+    };
+  }
+
+  function stepExperience(){
+    const opts = [
+      {v:'starter',  label:'Just starting out',  sub:'Building my first projects'},
+      {v:'practiced',label:'Some hands-on experience',sub:'I\'ve built 2-5 real projects or had an internship'},
+      {v:'confident',label:'Confident professional', sub:'I\'ve shipped work used by real users'}
+    ];
+    return {
+      h2:'How much experience do you have?',
+      hint:'Be honest - clients value clear expectations.',
+      html:`<div class="opt-grid one-col">${opts.map(o=>`
+        <div class="opt ${profile.experience===o.v?'sel':''}" onclick="pickExperience('${o.v}')">
+          <span class="oi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 .5-5.5 4.5 2 7L12 17l-6.5 4 2-7L2 9.5 9 9z"/></svg></span>
+          <span class="ot"><strong>${o.label}</strong><em>${o.sub}</em></span>
+        </div>`).join('')}</div>`
+    };
+  }
+
+  function stepEducation(){
+    return {
+      h2:'Tell us about your education',
+      hint:'Where are/were you studying?',
+      html:`
+        <div class="form-field" id="ed-uni">
+          <label for="edUni">University / College</label>
+          <div class="uni-ac">
+            <input id="edUni" type="text" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="uniSuggest" placeholder="Start typing - e.g. Cape Town, Wits, Tshwane…" value="${escAttr(profile.university)}" oninput="uniInput(this.value)" onfocus="uniInput(this.value)" onkeydown="uniKey(event)" onblur="uniBlur()">
+            <div class="uni-suggest" id="uniSuggest" role="listbox" hidden></div>
+          </div>
+          <div class="uni-hint" id="uniHint">Pick your institution from the list (universities, private colleges &amp; TVET colleges).</div>
+          <div class="errmsg">Select your institution from the list.</div>
+        </div>
+        <div class="form-field" id="ed-course">
+          <label for="edCourse">Course / Qualification</label>
+          <input id="edCourse" type="text" placeholder="e.g. BSc Computer Science" value="${escAttr(profile.course)}" oninput="updateField('course',this.value)">
+          <div class="errmsg">Enter your course or qualification.</div>
+        </div>
+        ${profile.status==='student' ? `
+        <div class="form-field" id="ed-degyear">
+          <label for="edDegYear">Which year of your degree are you in?</label>
+          <select id="edDegYear" onchange="updateField('degreeYear',this.value)">
+            <option value="">Select…</option>
+            ${['1st year','2nd year','3rd year','4th year','5th year','Honours','Masters','PhD'].map(o=>`<option ${profile.degreeYear===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+          <div class="errmsg">Select which year you're in.</div>
+        </div>
+        <div class="form-field" id="ed-startyear">
+          <label for="edStartYear">Year you started at this institution</label>
+          <select id="edStartYear" onchange="updateField('startYear',this.value)">
+            <option value="">Select…</option>
+            ${(()=>{const cy=new Date().getFullYear();let o='';for(let y=cy;y>=2010;y--){o+=`<option ${String(profile.startYear)===String(y)?'selected':''}>${y}</option>`;}return o;})()}
+          </select>
+          <div class="errmsg">Select the year you started.</div>
+        </div>` : ''}
+        <div class="form-field" id="ed-year">
+          <label for="edYear">${profile.status==='grad' ? 'Year graduated' : 'Year (expected) graduation'}</label>
+          <select id="edYear" onchange="updateField('gradYear',this.value)">
+            <option value="">Select…</option>
+            ${(()=>{const cy=new Date().getFullYear();const isGrad=profile.status==='grad';const hi=isGrad?cy:cy+7;const lo=isGrad?1990:cy;let o='';for(let y=hi;y>=lo;y--){o+=`<option ${String(profile.gradYear)===String(y)?'selected':''}>${y}</option>`;}return o;})()}
+          </select>
+          <div class="errmsg">Select your graduation year.</div>
+        </div>`
+    };
+  }
+
+  function validateEducation(){
+    const ok1 = profile.university.trim().length >= 2;
+    const ok2 = profile.course.trim().length >= 2;
+    const y = parseInt(profile.gradYear,10);
+    const cy = new Date().getFullYear();
+    // Graduates can't graduate in the future; students may give an expected year.
+    const maxYear = (profile.status==='grad') ? cy : cy + 7;
+    const ok3 = !isNaN(y) && y >= 1990 && y <= maxYear;
+    // Students must also state their degree year + institution start year.
+    let ok4 = true;
+    if(profile.status==='student'){
+      const sy = parseInt(profile.startYear,10);
+      ok4 = !!(profile.degreeYear && profile.degreeYear.trim()) && !isNaN(sy) && sy >= 1990 && sy <= 2035;
+    }
+    return ok1 && ok2 && ok3 && ok4;
+  }
+
+  // ─── University / college autocomplete (matches against SA_INSTITUTIONS) ───
+  let _uniMatches = [], _uniActive = -1;
+  function uniInput(val){
+    updateField('university', val);
+    const box = document.getElementById('uniSuggest');
+    const inp = document.getElementById('edUni');
+    if(!box) return;
+    const q = String(val||'').trim().toLowerCase();
+    // Only suggest once the user starts typing - never on an empty field.
+    if(!q){ _uniMatches = []; _uniActive = -1; box.hidden = true; if(inp) inp.setAttribute('aria-expanded','false'); return; }
+    let list;
+    {
+      // Nickname/abbreviation matches first (e.g. "wits", "tuks", "maties").
+      const aliasHits = [];
+      Object.keys(UNI_ALIASES).forEach(k=>{ if(k.indexOf(q)>=0 || q.indexOf(k)>=0){ const n=UNI_ALIASES[k]; if(aliasHits.indexOf(n)<0) aliasHits.push(n); } });
+      const starts = [], contains = [];
+      SA_INSTITUTIONS.forEach(n=>{ const l=n.toLowerCase(); if(l.startsWith(q)) starts.push(n); else if(l.indexOf(q)>=0) contains.push(n); });
+      const seen={};
+      list = aliasHits.concat(starts, contains).filter(n=>{ if(seen[n]) return false; seen[n]=1; return true; }).slice(0, 8);
+    }
+    _uniMatches = list; _uniActive = -1;
+    if(!list.length){ box.hidden = true; if(inp) inp.setAttribute('aria-expanded','false'); return; }
+    box.innerHTML = list.map((n,i)=>`<button type="button" role="option" class="uni-opt" data-i="${i}" onmousedown="event.preventDefault()" onclick="uniPick(${i})">${esc(n)}</button>`).join('');
+    box.hidden = false; if(inp) inp.setAttribute('aria-expanded','true');
+  }
+  function uniPick(i){
+    const n = _uniMatches[i]; if(n==null) return;
+    const inp = document.getElementById('edUni'); if(inp){ inp.value = n; inp.setAttribute('aria-expanded','false'); }
+    updateField('university', n);
+    const box = document.getElementById('uniSuggest'); if(box) box.hidden = true;
+  }
+  function uniHighlight(){
+    const box = document.getElementById('uniSuggest'); if(!box) return;
+    Array.from(box.children).forEach((b,i)=> b.classList.toggle('active', i===_uniActive));
+    const act = box.children[_uniActive]; if(act && act.scrollIntoView) act.scrollIntoView({block:'nearest'});
+  }
+  function uniKey(e){
+    const box = document.getElementById('uniSuggest'); if(!box || box.hidden) return;
+    if(e.key==='ArrowDown'){ e.preventDefault(); _uniActive = Math.min(_uniMatches.length-1, _uniActive+1); uniHighlight(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); _uniActive = Math.max(0, _uniActive-1); uniHighlight(); }
+    else if(e.key==='Enter'){ if(_uniActive>=0){ e.preventDefault(); uniPick(_uniActive); } }
+    else if(e.key==='Escape'){ box.hidden = true; }
+  }
+  function uniBlur(){
+    // Delay so an option click registers first. On blur, snap a near-exact
+    // free-text entry to its canonical institution name.
+    setTimeout(()=>{
+      const box = document.getElementById('uniSuggest'); if(box) box.hidden = true;
+      const inp = document.getElementById('edUni'); if(inp) inp.setAttribute('aria-expanded','false');
+      const typed = (profile.university||'').trim().toLowerCase();
+      if(typed){
+        const exact = SA_INSTITUTIONS.find(n=> n.toLowerCase()===typed);
+        if(exact && inp){ inp.value = exact; updateField('university', exact); }
+      }
+    }, 160);
+  }
+
+  function stepSkills(){
+    const cat = CATEGORIES.find(c => c.id === profile.field);
+    const pool = cat ? cat.skills : [];
+    const atMax = profile.skills.length >= 5;
+    const chips = pool.map(s => { const sel=profile.skills.includes(s); return `<button class="spill ${sel?'sel':''}${(!sel&&atMax)?' spill-disabled':''}" onclick="toggleSkill('${esc(s)}')">${s}</button>`; }).join('');
+    return {
+      h2:'Pick your strongest skills',
+      hint:`Choose 2 to 5 from <strong>${cat ? cat.name : 'your field'}</strong>. These help us rank you in matches.`,
+      html:`<div class="skill-pick">${chips}</div>
+            <div class="help" style="margin-top:14px;font-size:.82rem;color:var(--muted)"><strong style="color:var(--ink)">${profile.skills.length}</strong> of 5 selected${atMax?' · max reached':''}</div>`
+    };
+  }
+
+  function stepTitleRate(){
+    return {
+      h2:'Set your professional title and rate',
+      hint:'This is what clients see first. You can update it any time.',
+      html:`
+        <div class="form-field" id="tr-title">
+          <label for="trTitle">Professional title</label>
+          <input id="trTitle" type="text" placeholder="e.g. Full-stack React Developer" value="${escAttr(profile.title)}" oninput="updateField('title',this.value)">
+          <div class="errmsg">Add a short title (5+ characters).</div>
+        </div>
+        <div class="form-field" id="tr-rate">
+          <label for="trRate">Hourly rate</label>
+          <div class="currency-input">
+            <input id="trRate" type="number" min="50" max="2000" step="10" placeholder="e.g. 250" value="${escAttr(profile.rate)}" oninput="updateField('rate',this.value)">
+          </div>
+          <div class="help">Average student rate is R150-R350/hr. You can change this whenever you want.</div>
+          <div class="errmsg">Enter a rate between R50 and R2000.</div>
+        </div>`
+    };
+  }
+  function validateTitleRate(){
+    const titleOk = profile.title.trim().length >= 5;
+    const r = parseInt(profile.rate,10);
+    const rateOk = !isNaN(r) && r >= 50 && r <= 2000;
+    return titleOk && rateOk;
+  }
+
+  function stepBio(){
+    return {
+      h2:'Write a short bio',
+      hint:'Tell clients what makes you a great hire. 2-4 sentences works well.',
+      html:`
+        <div class="form-field" id="bio-field">
+          <label for="bioText">About you</label>
+          <textarea id="bioText" placeholder="e.g. Final-year computer science student with a passion for clean code and shipped two student projects used by 500+ classmates…" oninput="updateField('bio',this.value)">${esc(profile.bio)}</textarea>
+          <div class="help" id="bioCounter">${profile.bio.length} characters · minimum 40</div>
+          <div class="errmsg">Write at least 40 characters.</div>
+        </div>`
+    };
+  }
+
+  function stepSoftHobbies(){
+    const atMax = profile.softSkills.length >= 5;
+    const chips = SOFT_SKILLS.map(s => { const sel=profile.softSkills.includes(s); return `<button class="spill ${sel?'sel':''}${(!sel&&atMax)?' spill-disabled':''}" onclick="toggleSoftSkill('${esc(s)}')">${s}</button>`; }).join('');
+    return {
+      h2:'Soft skills &amp; hobbies',
+      hint:'Pick the soft skills that describe how you work (2 to 5). Hobbies are optional but help clients see you as a real person.',
+      html:`
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:.82rem;color:var(--ink);margin-bottom:9px">Soft skills</div>
+        <div class="skill-pick">${chips}</div>
+        <div class="help" style="font-size:.78rem;color:var(--muted);margin-top:8px"><strong style="color:var(--ink)">${profile.softSkills.length}</strong> of 5 selected${atMax?' · max reached':''}</div>
+
+        <div class="form-field" style="margin-top:22px" id="hobbies-field">
+          <label for="hobbiesText">Hobbies &amp; interests <span style="font-weight:400;color:var(--muted);font-size:.78rem">(optional)</span></label>
+          <textarea id="hobbiesText" placeholder="e.g. Pickup soccer, hiking on weekends, writing short fiction, building Raspberry Pi side projects, mentoring younger students…" oninput="updateField('hobbies',this.value)" style="min-height:90px">${esc(profile.hobbies)}</textarea>
+          <div class="help" style="font-size:.78rem;color:var(--muted);margin-top:6px">A line or two is plenty.</div>
+        </div>`
+    };
+  }
+
+  function stepPortfolio(){
+    return {
+      h2:'Showcase your work',
+      hint:'Add up to 3 files (CV, certificates or work samples), a link to your work, and any extra detail. All optional - but they help you stand out.',
+      html:`
+        <div class="form-field" id="pf-files-field">
+          <label>Files <span style="font-weight:400;color:var(--muted);font-size:.78rem">(CV, certificates or samples - max 3, PDF/Word/images, up to 10MB each)</span></label>
+          <div id="pfList" class="pf-up-list"></div>
+          <input type="file" id="pfFileInput" accept="image/png,image/jpeg,image/webp,application/pdf,.pdf,.doc,.docx" multiple onchange="onPortfolioFiles(this)" style="display:none">
+          <button type="button" id="pfAddBtn" class="pf-add-btn" onclick="document.getElementById('pfFileInput').click()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add file
+          </button>
+          <div class="help" id="pfCount" style="font-size:.78rem;color:var(--muted);margin-top:8px">0 of 3 files</div>
+        </div>
+        <div class="form-field" style="margin-top:20px">
+          <label for="pfWebsite">Website or professional profile <span style="font-weight:400;color:var(--muted);font-size:.78rem">(optional, recommended)</span></label>
+          <input id="pfWebsite" type="url" inputmode="url" placeholder="e.g. linkedin.com/in/you or your portfolio site" value="${escAttr(profile.website)}" oninput="updateField('website',this.value)">
+        </div>
+        <div class="form-field" style="margin-top:18px">
+          <label for="pfCerts">Certifications <span style="font-weight:400;color:var(--muted);font-size:.78rem">(optional)</span></label>
+          <textarea id="pfCerts" placeholder="e.g. AWS Certified Cloud Practitioner, Google Data Analytics, CompTIA A+…" oninput="updateField('certifications',this.value)" style="min-height:80px">${esc(profile.certifications)}</textarea>
+        </div>
+        <div class="form-field" style="margin-top:18px">
+          <label for="pfExp">Relevant work experience <span style="font-weight:400;color:var(--muted);font-size:.78rem">(optional)</span></label>
+          <textarea id="pfExp" placeholder="e.g. Freelance web developer (2023-now) - built 5 client sites in React. Intern at TechCo - automated reporting with Python…" oninput="updateField('workExperience',this.value)" style="min-height:90px">${esc(profile.workExperience)}</textarea>
+        </div>`
+    };
+  }
+
+  // ── CLIENT step renderers ──
+  function stepClientType(){
+    const opts = [
+      {v:'individual', label:'Individual', sub:'I\'m hiring for personal projects'},
+      {v:'startup',    label:'Startup',    sub:'Early-stage company building a product'},
+      {v:'small',      label:'Small organization', sub:'Established team of 2-50 people'},
+      {v:'large',      label:'Established company',sub:'50+ people, ongoing projects'}
+    ];
+    return {
+      h2:'How would you describe yourself?',
+      hint:'This helps us tailor suggestions to your scale.',
+      html:`<div class="opt-grid">${opts.map(o=>`
+        <div class="opt ${profile.clientType===o.v?'sel':''}" onclick="pickClientType('${o.v}')">
+          <span class="oi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg></span>
+          <span class="ot"><strong>${o.label}</strong><em>${o.sub}</em></span>
+        </div>`).join('')}</div>`
+    };
+  }
+
+  function stepClientNeeds(){
+    const cards = CATEGORIES.map(c => `
+      <div class="opt ${profile.needs.includes(c.id)?'sel':''}" onclick="toggleNeed('${c.id}')">
+        <span class="oi">${ICONS[c.id]}</span>
+        <span class="ot"><strong>${c.name}</strong></span>
+      </div>`).join('');
+    return {
+      h2:'What kind of ICT help are you looking for?',
+      hint:'Choose one or more areas - you can hire across categories later.',
+      html:`<div class="opt-grid">${cards}</div>`
+    };
+  }
+
+  function stepClientTiming(){
+    const opts = [
+      {v:'now',     label:'I\'m ready to hire now',     sub:'Looking to start within a week'},
+      {v:'month',   label:'Within the next month',     sub:'Planning ahead, no rush'},
+      {v:'exploring', label:'Just exploring',          sub:'Browsing for future projects'}
+    ];
+    return {
+      h2:'When are you looking to hire?',
+      hint:'No pressure - you can always change this later.',
+      html:`<div class="opt-grid one-col">${opts.map(o=>`
+        <div class="opt ${profile.timing===o.v?'sel':''}" onclick="pickTiming('${o.v}')">
+          <span class="oi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+          <span class="ot"><strong>${o.label}</strong><em>${o.sub}</em></span>
+        </div>`).join('')}</div>`
+    };
+  }
+
+  function stepClientDetails(){
+    const indLabel = profile.clientType === 'individual' ? 'What do you do?' : 'Industry';
+    const namePh   = profile.clientType === 'individual' ? 'e.g. Personal projects' : 'e.g. Acme Software (Pty) Ltd';
+    const nameLabel = profile.clientType === 'individual' ? 'Display name' : 'Organization name';
+    return {
+      h2:'Tell us about your organization',
+      hint:'This is what talent will see when you reach out.',
+      html:`
+        <div class="form-field" id="cd-name">
+          <label for="cdName">${nameLabel}</label>
+          <input id="cdName" type="text" placeholder="${namePh}" value="${escAttr(profile.orgName)}" oninput="updateField('orgName',this.value)">
+          <div class="errmsg">Enter your name or organization.</div>
+        </div>
+        <div class="form-row">
+          <div class="form-field" id="cd-ind">
+            <label for="cdInd">${indLabel}</label>
+            <input id="cdInd" type="text" placeholder="e.g. Fintech, e-commerce" value="${escAttr(profile.industry)}" oninput="updateField('industry',this.value)">
+            <div class="errmsg">Enter your industry.</div>
+          </div>
+          <div class="form-field" id="cd-loc">
+            <label for="cdLoc">Province</label>
+            <select id="cdLoc" onchange="updateField('location',this.value)">
+              <option value="">Select your province…</option>
+              ${['Eastern Cape','Free State','Gauteng','KwaZulu-Natal','Limpopo','Mpumalanga','North West','Northern Cape','Western Cape'].map(c=>`<option ${profile.location===c?'selected':''}>${c}</option>`).join('')}
+            </select>
+            <div class="errmsg">Choose your province.</div>
+          </div>
+        </div>`
+    };
+  }
+  function validateClientDetails(){
+    return profile.orgName.trim().length >= 2 && profile.industry.trim().length >= 2 && !!profile.location;
+  }
+
+  function stepClientDescription(){
+    return {
+      h2:'Describe what you\'re looking for',
+      hint:'A short overview helps talent self-select for your projects.',
+      html:`
+        <div class="form-field" id="desc-field">
+          <label for="descText">About your work and what you need</label>
+          <textarea id="descText" placeholder="e.g. We're a fintech startup building a payment platform for SA SMEs. Looking for React and Node.js talent for short-term feature work…" oninput="updateField('description',this.value)">${esc(profile.description)}</textarea>
+          <div class="help" id="descCounter">${profile.description.length} characters · minimum 30</div>
+          <div class="errmsg">Write at least 30 characters.</div>
+        </div>`
+    };
+  }
+
+  function stepReview(){
+    const items = ROLE === 'talent' ? talentReviewItems() : clientReviewItems();
+    return {
+      h2:'Review your profile',
+      hint:'Looks good? Hit \"Finish\" to create your profile. You can edit anything later.',
+      html:`<div class="review-list">${items.map(([k,v]) => `
+        <div class="rv-item">
+          <div class="rv-label">${k}</div>
+          <div class="rv-value">${v}</div>
+        </div>`).join('')}</div>`
+    };
+  }
+
+  function talentReviewItems(){
+    const cat = CATEGORIES.find(c => c.id === profile.field);
+    const statusLabel = {student:'Currently studying',grad:'Recent graduate',selfTaught:'Self-taught'}[profile.status] || '-';
+    const expLabel = {starter:'Just starting',practiced:'Some experience',confident:'Confident professional'}[profile.experience] || '-';
+    return [
+      ['Focus area',      cat ? cat.name : '-'],
+      ['Status',          statusLabel],
+      ['Experience',      expLabel],
+      ['Education',       `${esc(profile.course)} · ${esc(profile.university)} (${esc(profile.gradYear)})`],
+      ['Skills',          `<div class="rv-chips">${profile.skills.map(s=>`<span class="rv-chip">${esc(s)}</span>`).join('')}</div>`],
+      ['Title',           esc(profile.title)],
+      ['Hourly rate',     `R${esc(profile.rate)}/hr`],
+      ['About',           esc(profile.bio).replace(/\n/g,'<br>')],
+      ['Soft skills',     `<div class="rv-chips">${profile.softSkills.map(s=>`<span class="rv-chip">${esc(s)}</span>`).join('')}</div>`],
+      ['Hobbies',         profile.hobbies ? esc(profile.hobbies).replace(/\n/g,'<br>') : '<span style="color:var(--muted);font-style:italic">Not provided</span>']
+    ];
+  }
+  function clientReviewItems(){
+    const typeLabel = {individual:'Individual',startup:'Startup',small:'Small organization',large:'Established company'}[profile.clientType] || '-';
+    const timeLabel = {now:'Ready to hire now',month:'Within the next month',exploring:'Just exploring'}[profile.timing] || '-';
+    const needsList = profile.needs.map(id => (CATEGORIES.find(c=>c.id===id)||{}).name).filter(Boolean);
+    return [
+      ['Type',           typeLabel],
+      ['Looking for',    `<div class="rv-chips">${needsList.map(n=>`<span class="rv-chip">${esc(n)}</span>`).join('')}</div>`],
+      ['Timing',         timeLabel],
+      ['Name',           esc(profile.orgName)],
+      ['Industry',       esc(profile.industry)],
+      ['Province',       esc(profile.location)],
+      ['Description',    esc(profile.description).replace(/\n/g,'<br>')]
+    ];
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Helpers
+  // ────────────────────────────────────────────────────────────────────
+  function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+  function escAttr(s){return esc(s);}
+
+  window.pickField      = function(id){ profile.field=id; saveDraft(); render(); };
+  window.pickStatus     = function(v){ profile.status=v; saveDraft(); render(); };
+  window.pickExperience = function(v){ profile.experience=v; saveDraft(); render(); };
+  window.pickClientType = function(v){ profile.clientType=v; saveDraft(); render(); };
+  window.pickTiming     = function(v){ profile.timing=v; saveDraft(); render(); };
+  window.toggleSkill    = function(s){
+    const i = profile.skills.indexOf(s);
+    if(i === -1){ if(profile.skills.length >= 5) return; profile.skills.push(s); }
+    else profile.skills.splice(i,1);
+    saveDraft(); render();
+  };
+  window.toggleSoftSkill = function(s){
+    const i = profile.softSkills.indexOf(s);
+    if(i === -1){ if(profile.softSkills.length >= 5) return; profile.softSkills.push(s); }
+    else profile.softSkills.splice(i,1);
+    saveDraft(); render();
+  };
+  window.toggleNeed     = function(id){
+    const i = profile.needs.indexOf(id);
+    if(i === -1) profile.needs.push(id);
+    else profile.needs.splice(i,1);
+    saveDraft(); render();
+  };
+  window.updateField    = function(key, val){
+    profile[key] = val;
+    saveDraft();
+    // Quick re-validate to enable button without full re-render
+    document.getElementById('nextBtn').disabled = !STEPS[stepIndex].validate();
+    // Update counters
+    const bc = document.getElementById('bioCounter');
+    if(bc) bc.innerHTML = `${profile.bio.length} characters · minimum 40`;
+    const dc = document.getElementById('descCounter');
+    if(dc) dc.innerHTML = `${profile.description.length} characters · minimum 30`;
+  };
+
+  // ── Portfolio file handling (max 3; uploads to Storage via the module) ──
+  window.renderPortfolioList = function(){
+    const box = document.getElementById('pfList'); if(!box) return;
+    const files = profile.portfolio || [];
+    box.innerHTML = files.map((f,i)=>{
+      if(f.uploading) return `<div class="pf-up-item"><span class="pf-up-spin"></span><span class="pf-up-name">${esc(f.name)}</span><span class="pf-up-status">Uploading…</span></div>`;
+      const isImg = /^image\//.test(f.type||'') || /\.(png|jpe?g|webp|gif)(\?|$)/i.test(f.url||'');
+      const thumb = isImg
+        ? `<img src="${escAttr(f.url)}" class="pf-up-thumb" alt="">`
+        : `<span class="pf-up-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>`;
+      return `<div class="pf-up-item"><button type="button" class="pf-up-open" onclick="previewUpload(${i})" title="Preview file">${thumb}<span class="pf-up-name">${esc(f.name)}</span></button><button type="button" class="pf-up-del" onclick="removePortfolioFile(${i})" aria-label="Remove file">×</button></div>`;
+    }).join('');
+    const addBtn = document.getElementById('pfAddBtn');
+    if(addBtn) addBtn.style.display = (files.length >= 3) ? 'none' : '';
+    const cnt = document.getElementById('pfCount');
+    if(cnt) cnt.textContent = `${files.length} of 3 files`;
+  };
+  // Click an uploaded file to preview it (images inline, PDFs framed, else new tab).
+  window.previewUpload = function(i){
+    const f = (profile.portfolio||[])[i];
+    if(!f || !f.url) return;
+    const isImg = /^image\//.test(f.type||'') || /\.(png|jpe?g|webp|gif|bmp|svg)(\?|$)/i.test(f.url);
+    const isPdf = /pdf/i.test(f.type||'') || /\.pdf(\?|$)/i.test(f.url);
+    if(!isImg && !isPdf){ window.open(f.url,'_blank','noopener'); return; }
+    let layer=document.getElementById('obDocPreview');
+    if(!layer){ layer=document.createElement('div'); layer.id='obDocPreview'; layer.className='ob-doc-preview'; layer.addEventListener('click',e=>{ if(e.target===layer) closeUploadPreview(); }); document.body.appendChild(layer); }
+    const body = isImg ? `<img src="${escAttr(f.url)}" alt="" class="obdp-img">` : `<iframe src="${escAttr(f.url)}" class="obdp-frame" title="${escAttr(f.name)}"></iframe>`;
+    layer.innerHTML = `<div class="obdp-box"><div class="obdp-top"><span class="obdp-name">${esc(f.name)}</span><a class="obdp-open" href="${escAttr(f.url)}" target="_blank" rel="noopener noreferrer">Open ↗</a><button type="button" class="obdp-x" onclick="closeUploadPreview()" aria-label="Close">×</button></div>${body}</div>`;
+    document.body.style.overflow='hidden';
+    void layer.offsetWidth; layer.classList.add('show');
+    document.addEventListener('keydown', _obDocEsc);
+  };
+  window.closeUploadPreview = function(){ const l=document.getElementById('obDocPreview'); if(!l) return; l.classList.remove('show'); document.body.style.overflow=''; document.removeEventListener('keydown', _obDocEsc); };
+  function _obDocEsc(e){ if(e.key==='Escape') closeUploadPreview(); }
+  window.onPortfolioFiles = async function(input){
+    const picked = Array.from(input.files || []);
+    input.value = '';
+    if(!window._uploadPortfolio){ alert('Uploads aren\'t ready yet - please wait a moment and try again.'); return; }
+    for(const file of picked){
+      profile.portfolio = profile.portfolio || [];
+      if(profile.portfolio.length >= 3) break;
+      if(file.size > 10*1024*1024){ alert(`"${file.name}" is over 10MB. Please choose a smaller file.`); continue; }
+      const tmp = 'up'+Date.now()+Math.floor(Math.random()*1000);
+      profile.portfolio.push({ name:file.name, url:'', type:file.type, uploading:true, _tmp:tmp });
+      renderPortfolioList();
+      try {
+        const meta = await window._uploadPortfolio(file);
+        const i = profile.portfolio.findIndex(f=>f._tmp===tmp);
+        if(i>=0) profile.portfolio[i] = meta;
+        saveDraft();
+      } catch(e){
+        const i = profile.portfolio.findIndex(f=>f._tmp===tmp);
+        if(i>=0) profile.portfolio.splice(i,1);
+        alert(`Couldn't upload "${file.name}". ${ (e && e.code) ? e.code : '' }`);
+      }
+      renderPortfolioList();
+    }
+  };
+  window.removePortfolioFile = function(i){
+    const f = (profile.portfolio || [])[i];
+    if(f && f.path && window._deletePortfolio) window._deletePortfolio(f.path);
+    profile.portfolio.splice(i,1);
+    saveDraft();
+    renderPortfolioList();
+  };
+
+  window.prevStep = function(){
+    if(stepIndex > 0){ stepIndex--; render(); }
+  };
+  window.nextStep = function(){
+    if(!STEPS[stepIndex].validate()) return;
+    if(stepIndex < STEPS.length - 1){
+      stepIndex++;
+      render();
+    } else {
+      finish();
+    }
+  };
+  window.exitOnboarding = function(){
+    // Save partial progress under the profile slot so the profile page can
+    // render what's there and the wizard can resume from the same data later.
+    profile.role = ROLE;
+    profile.partial = true;
+    profile.updatedAt = new Date().toISOString();
+    saveProfileForCurrentUser();
+    if(window._workleySaveProfileToCloud) window._workleySaveProfileToCloud(profile);
+    saveDraft();
+    location.href = 'profile.html';
+  };
+  window.goToProfile = function(){
+    location.href = 'profile.html';
+  };
+  window.goToDashboard = function(){
+    location.href = 'dashboard.html';
+  };
+
+  // ────────────────────────────────────────────────────────────────────
+  // Render
+  // ────────────────────────────────────────────────────────────────────
+  function render(){
+    const step = STEPS[stepIndex];
+    const content = step.render();
+
+    document.getElementById('stepsMount').innerHTML = `
+      <div class="ob-step active">
+        <h2>${content.h2}</h2>
+        <p class="ob-hint">${content.hint}</p>
+        <div style="margin-top:22px">${content.html}</div>
+      </div>`;
+
+    document.getElementById('leftStepNum').textContent = `Step ${stepIndex+1}`;
+    document.getElementById('leftTitle').textContent = step.label;
+    document.getElementById('leftBlurb').textContent = leftBlurbFor(stepIndex);
+    document.getElementById('illoMount').innerHTML = ILLOS[step.illo] || ILLOS.questions;
+
+    document.getElementById('stepNow').textContent = stepIndex+1;
+    document.getElementById('stepTotal').textContent = STEPS.length;
+    document.getElementById('stepLabel').textContent = step.label;
+    document.getElementById('progBar').style.width = `${((stepIndex+1)/STEPS.length)*100}%`;
+
+    document.getElementById('backBtn').style.visibility = stepIndex === 0 ? 'hidden' : 'visible';
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.disabled = !step.validate();
+    nextBtn.innerHTML = stepIndex === STEPS.length-1 ? 'Finish &amp; create profile ✓' : 'Continue →';
+    document.getElementById('stepTag').textContent = `${stepIndex+1} of ${STEPS.length}`;
+
+    // Portfolio step: paint the current files list (no-op on other steps).
+    if(window.renderPortfolioList) window.renderPortfolioList();
+
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function leftBlurbFor(i){
+    if(i === 0) return 'Pick a unique @handle - this is how people find and identify you on Workley.';
+    if(ROLE === 'talent'){
+      if(i <= 3) return 'A few quick questions to set up your match profile.';
+      if(i === 4) return 'Education is a key signal - clients love seeing your background.';
+      if(i === 5) return 'Skills drive your match score. More relevant skills, better matches.';
+      if(i === 6) return 'Your title and rate set expectations upfront.';
+      if(i === 7) return 'A short, honest bio earns trust fast.';
+      return 'Almost there - review and finish.';
+    }
+    if(i <= 3) return 'A few quick questions to tailor your hiring experience.';
+    if(i === 4) return 'Talent likes knowing who they\'re working with.';
+    if(i === 5) return 'A clear brief is the fastest way to find your match.';
+    return 'Almost done - take one last look.';
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Finish - save and show success
+  // ────────────────────────────────────────────────────────────────────
+  function finish(){
+    profile.completedAt = new Date().toISOString();
+    profile.role = ROLE;
+    saveProfileForCurrentUser();
+    if(window._workleySaveProfileToCloud) window._workleySaveProfileToCloud(profile);
+    // Hide form, show success
+    document.getElementById('stepsMount').style.display = 'none';
+    document.getElementById('obFoot').style.display = 'none';
+    document.getElementById('successView').classList.add('active');
+    document.getElementById('successTitle').textContent = 'Your profile is ready!';
+    document.getElementById('successMsg').textContent = ROLE === 'talent'
+      ? 'You\'re now visible to clients looking for your skills. Head to your profile to make any final tweaks.'
+      : 'You\'re all set to start matching with verified ICT talent. Take a look at your profile or jump into Smart Match.';
+    document.getElementById('progBar').style.width = '100%';
+    document.getElementById('stepNow').textContent = STEPS.length;
+    document.getElementById('stepLabel').textContent = 'Complete';
+    document.getElementById('leftStepNum').textContent = 'Complete';
+    document.getElementById('leftTitle').textContent = 'You did it!';
+    document.getElementById('leftBlurb').textContent = ROLE === 'talent'
+      ? 'Your profile is live for verified clients to discover.'
+      : 'You\'re ready to find your first match on Workley.';
+    document.getElementById('illoMount').innerHTML = ILLOS.review;
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // Persistence - uses Firebase Auth UID once available
+  // ────────────────────────────────────────────────────────────────────
+  function saveProfileForCurrentUser(){
+    // Save under both UID-keyed slot (preferred) and a "last" slot for guests
+    const uid = window._currentUid || 'guest';
+    try {
+      localStorage.setItem('workley_profile_'+uid, JSON.stringify(profile));
+      localStorage.setItem('workley_profile_last', JSON.stringify(profile));
+      // Clear the draft now that it's saved
+      localStorage.removeItem(draftKey);
+    } catch(e){
+      console.error('[Workley] saveProfile failed:', e);
+    }
+  }
+
+  // First render - even if Firebase isn't ready yet, so the UI shows fast
+  render();
+</script>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js';
+  import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.9.1/firebase-storage.js';
+
+  const firebaseConfig = {
+    apiKey:'AIzaSyCJLwKUwKjre9exI6ON3iVgsNakofYE2EY',
+    authDomain:'ispani-site.firebaseapp.com',
+    projectId:'ispani-site',
+    storageBucket:'ispani-site.firebasestorage.app',
+    messagingSenderId:'699948368481',
+    appId:'1:699948368481:web:26933afe641e09fc3e6020'
+  };
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+  const storage = getStorage(app);
+
+  // Portfolio file upload (used by the Portfolio onboarding step). Stores under
+  // users/<uid>/portfolio/<safeName>; returns {name,url,type,path}. Mirrors the
+  // Storage rules' strict filename pattern.
+  window._uploadPortfolio = async function(file){
+    const uid = window._currentUid;
+    if(!uid || !file) throw new Error('missing-file');
+    const ext = (String(file.name||'').split('.').pop() || 'pdf').toLowerCase();
+    const safe = 'pf_' + Date.now() + '_' + Math.floor(Math.random()*1e5) + '.' + ext;
+    const r = storageRef(storage, `users/${uid}/portfolio/${safe}`);
+    // Preserve the original filename on download; inline preview only for raster
+    // images + PDF (SVG can carry scripts, so it downloads). Mirrors firebase-config.js.
+    const ct = String(file.type||'');
+    const clean = String(file.name||'file').replace(/[\r\n"\\]/g,'').slice(0,180) || 'file';
+    const inline = (/^image\//i.test(ct) && !/svg/i.test(ct)) || ct === 'application/pdf';
+    const meta = { contentDisposition: (inline?'inline':'attachment') + '; filename="' + clean.replace(/[^\x20-\x7E]/g,'_') + '"; filename*=UTF-8\'\'' + encodeURIComponent(clean) };
+    if(file.type) meta.contentType = file.type;
+    await uploadBytes(r, file, meta);
+    const url = await getDownloadURL(r);
+    return { name: String(file.name||'file').slice(0,120), url, type: file.type || ext, path: `users/${uid}/portfolio/${safe}` };
+  };
+  window._deletePortfolio = async function(path){
+    if(!path) return;
+    try { await deleteObject(storageRef(storage, path)); } catch(e){ /* no-op if missing */ }
+  };
+
+  // Write the completed profile to Firestore so the user is real & discoverable.
+  // Field whitelist mirrors firestore.rules (NO email here - that's private).
+  const PUB_TALENT = ['field','status','experience','university','course','gradYear','degreeYear','startYear','title','rate','skills','softSkills','hobbies','bio','website','certifications','workExperience'];
+  const PUB_CLIENT = ['clientType','needs','timing','orgName','industry','location','description'];
+  function toPublicProfile(p){
+    const role = p.role === 'client' ? 'client' : 'talent';
+    const out = { role };
+    let dn = window._currentName || '';
+    if(role === 'client' && p.orgName) dn = p.orgName;
+    out.displayName = (dn && dn.trim()) ? dn.trim().slice(0,80) : 'Workley member';
+    if(p.username) out.username = String(p.username).toLowerCase().slice(0,30);
+    if(p.avatar) out.avatar = String(p.avatar);
+    (role === 'client' ? PUB_CLIENT : PUB_TALENT).forEach(k=>{
+      const v = p[k];
+      if(v === undefined || v === null || v === '') return;
+      if(Array.isArray(v)) out[k] = v.slice(0,60).map(x=>String(x).slice(0,80));
+      else if(typeof v === 'number') out[k] = v;
+      else out[k] = String(v).slice(0, (k==='bio'||k==='description'||k==='workExperience') ? 2000 : 400);
+    });
+    // Portfolio is an array of {name,url,type} objects - keep its shape (max 3,
+    // skip any still-uploading or failed entries that have no url).
+    if(role === 'talent' && Array.isArray(p.portfolio)){
+      const pf = p.portfolio.slice(0,3)
+        .filter(f => f && f.url)
+        .map(f => ({ name:String(f.name||'file').slice(0,120), url:String(f.url), type:String(f.type||'').slice(0,80) }));
+      if(pf.length) out.portfolio = pf;
+    }
+    return out;
+  }
+  // Availability check for the onboarding username step (classic script calls this).
+  window._checkUsernameAvail = async function(handle){
+    const h = String(handle||'').toLowerCase();
+    if(!h) return null;
+    const s = await getDoc(doc(db,'usernames',h));
+    return s.exists() ? (s.data().uid || null) : null;
+  };
+  window._workleySaveProfileToCloud = async function(profile){
+    const uid = window._currentUid;
+    if(!uid || !profile) return false;
+    try {
+      const ref = doc(db, 'users', uid);
+      const snap = await getDoc(ref);
+      const data = toPublicProfile(profile);
+      data.updatedAt = serverTimestamp();
+      if(!snap.exists()) data.createdAt = serverTimestamp();
+      // Claim the chosen handle (create-only). If it's already taken by someone
+      // else, don't write a colliding username onto the profile.
+      const uname = String(profile.username||'').toLowerCase();
+      if(uname){
+        try {
+          const us = await getDoc(doc(db,'usernames',uname));
+          if(us.exists()){
+            if(us.data().uid !== uid){ delete data.username; }
+          } else {
+            await setDoc(doc(db,'usernames',uname), { uid, createdAt: serverTimestamp() });
+          }
+        } catch(e){ /* non-fatal: profile still saves */ }
+      }
+      await setDoc(ref, data, { merge: true });
+      if(window._currentEmail){
+        try { await setDoc(doc(db,'users',uid,'private_settings','contact'), { email: window._currentEmail }, { merge: true }); } catch(e){}
+      }
+      return true;
+    } catch(e){ console.warn('[Workley] cloud profile save skipped:', e.code || e.message); return false; }
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      window._currentUid = user.uid;
+      window._currentEmail = user.email || '';
+      // Auth displayName holds only the first name (used by the verification
+      // email). Prefer the full name captured at signup for the public profile.
+      let _fullName = '';
+      try { _fullName = localStorage.getItem('workley_signup_name_'+((user.email||'').toLowerCase())) || ''; } catch(e){}
+      window._currentName = _fullName || user.displayName || '';
+      try {
+        const existingRaw = localStorage.getItem('workley_profile_'+user.uid);
+        const existing = existingRaw ? JSON.parse(existingRaw) : null;
+        const force = sessionStorage.getItem('workley_force_onboarding');
+        // No force flag + finished profile → straight to profile page.
+        if(existing && !force){
+          location.href = 'profile.html';
+          return;
+        }
+        // Staying on onboarding to set up/edit → one-time "use desktop" nudge.
+        if(window._maybeDesktopTip) window._maybeDesktopTip();
+        // Explicit "edit fully" entry: hydrate the wizard with saved data
+        // so they're editing the real thing, not starting from scratch.
+        if(existing && force){
+          Object.assign(profile, existing);
+          render();
+        }
+        if(force) sessionStorage.removeItem('workley_force_onboarding');
+        // No local cache and not an explicit edit → the user may STILL have a
+        // real profile in Firestore (after a password reset / new device /
+        // cleared storage). Don't make them re-onboard: check the cloud first.
+        if(!existing && !force){
+          getDoc(doc(db, 'users', user.uid)).then(snap=>{
+            if(!snap.exists()) return;
+            const d = snap.data() || {};
+            const complete = !!(d.field || d.clientType || d.bio || d.description || (d.skills && d.skills.length));
+            if(complete){
+              try { localStorage.setItem('workley_profile_'+user.uid, JSON.stringify(Object.assign({ id:user.uid }, d))); } catch(e){}
+              location.href = 'profile.html';
+            }
+          }).catch(()=>{});
+        }
+      } catch(e){ console.error('[Workley] onboarding hydrate failed:', e); }
+    } else {
+      // No Firebase session yet - wait for the SDK to finish resolving the
+      // stored session before deciding the user is really not signed in.
+      // 4 s covers slow connections; if the user is genuinely logged out they
+      // land on the homepage where they can sign in.
+      setTimeout(()=>{ if(!window._currentUid) location.href = 'index.html'; }, 4000);
+    }
+  });
+</script>
+
+</body>
+</html>

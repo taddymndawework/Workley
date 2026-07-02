@@ -1,0 +1,544 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Auth gates ────────────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    // Reject sessions whose email has not been verified, matching the
+    // site's existing email-verification policy.
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+    function isOwner(userId) {
+      return verified() && request.auth.uid == userId;
+    }
+
+    // ─── Primitive validators ──────────────────────────────────────────────
+    function safeStr(v, minLen, maxLen) {
+      return v is string
+        && v.size() >= minLen
+        && v.size() <= maxLen
+        && v.matches('^[^\\x00-\\x1F\\x7F]*$'); // no control characters
+    }
+    function safeName(v) {
+      return safeStr(v, 2, 80) && v.trim() == v;
+    }
+    // Like safeStr but ALLOWS tab/newline/carriage-return (so multi-line chat
+    // messages aren't silently rejected); still blocks other control chars.
+    function safeMsg(v, minLen, maxLen) {
+      return v is string
+        && v.size() >= minLen && v.size() <= maxLen
+        && v.matches('^[^\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*$');
+    }
+    function safeUrl(v) {
+      return v is string && v.size() >= 10 && v.size() <= 1000
+        && v.matches('^https://[^\\s\\x00-\\x1F\\x7F]+$');
+    }
+    function isNow(field) {
+      return request.resource.data[field] == request.time;
+    }
+    function unchanged(field) {
+      return field in resource.data
+        && field in request.resource.data
+        && request.resource.data[field] == resource.data[field];
+    }
+    // Optional-field helpers: pass if the field is absent, else validate it.
+    function optStr(d, field, maxLen) {
+      return !(field in d) || safeStr(d[field], 0, maxLen);
+    }
+    function optEnum(d, field, allowed) {
+      return !(field in d) || (d[field] is string && d[field] in allowed);
+    }
+    function optList(d, field, maxSize) {
+      return !(field in d) || (d[field] is list && d[field].size() <= maxSize);
+    }
+    function optRate(d) {
+      return !('rate' in d)
+        || (d.rate is string && d.rate.size() <= 10)
+        || (d.rate is int && d.rate >= 0 && d.rate <= 100000)
+        || (d.rate is float && d.rate >= 0 && d.rate <= 100000);
+    }
+    function optAvatar(d) {
+      return !('avatar' in d) || safeUrl(d.avatar);
+    }
+
+    // ─── /users/{uid} - PUBLIC profile (discoverable talent/clients) ────────
+    // Personal contact info (email/phone) is NOT here - it lives in the
+    // owner-only private_settings subcollection. So this doc is safe to read
+    // publicly for catalog browsing & Smart Match.
+    match /users/{userId} {
+
+      // Full whitelist of writable keys (union of talent + client + meta).
+      // hasOnly(...) blocks any unknown / injected key (e.g. an email field).
+      function allowedKeys() {
+        return ['role','displayName','username','avatar','createdAt','updatedAt',
+                // talent
+                'field','status','experience','university','course','gradYear','degreeYear','startYear',
+                'title','rate','skills','softSkills','hobbies','bio',
+                // talent portfolio / extras
+                'website','certifications','workExperience','portfolio',
+                // client
+                'clientType','needs','timing','orgName','industry','location','description',
+                // messaging reply-time stats (maintained by the owner's own client)
+                'replyAvgMins','replyCount'];
+      }
+      function validProfile(d) {
+        return d.role in ['talent','client']
+          && safeName(d.displayName)
+          && ( !('username' in d) || (d.username is string && d.username.size() >= 3 && d.username.size() <= 30 && d.username.matches('^[a-z0-9._]+$')) )
+          && optAvatar(d)
+          && optEnum(d,'field',['dev','data','sec','cloud','support','design'])
+          && optEnum(d,'status',['student','grad','selfTaught'])
+          && optEnum(d,'experience',['starter','practiced','confident'])
+          && optEnum(d,'clientType',['individual','startup','small','large'])
+          && optEnum(d,'timing',['now','month','exploring'])
+          && optStr(d,'university',160) && optStr(d,'course',160) && optStr(d,'gradYear',20)
+          && optStr(d,'degreeYear',40) && optStr(d,'startYear',20)
+          && optStr(d,'title',160) && optStr(d,'bio',2000) && optStr(d,'hobbies',600)
+          && optStr(d,'orgName',160) && optStr(d,'industry',160) && optStr(d,'location',120)
+          && optStr(d,'description',2000)
+          && optStr(d,'website',400) && optStr(d,'certifications',1500) && optStr(d,'workExperience',2000)
+          && ( !('portfolio' in d) || (d.portfolio is list && d.portfolio.size() <= 3) )
+          && optRate(d)
+          && optList(d,'skills',60) && optList(d,'softSkills',60) && optList(d,'needs',12)
+          && ( !('replyAvgMins' in d) || (d.replyAvgMins is number && d.replyAvgMins >= 0 && d.replyAvgMins <= 525600) )
+          && ( !('replyCount' in d)   || (d.replyCount is number && d.replyCount >= 0) );
+      }
+
+      // Public read so guests can browse the catalog & featured talent.
+      // `list` is capped to slow bulk scraping (no PII is exposed).
+      allow get:  if true;
+      allow list: if request.query.limit <= 60;
+
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(allowedKeys())
+        && request.resource.data.keys().hasAll(['role','displayName','createdAt'])
+        && isNow('createdAt')
+        && ( !('updatedAt' in request.resource.data) || isNow('updatedAt') )
+        && validProfile(request.resource.data);
+
+      allow update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(allowedKeys())
+        && unchanged('role')
+        && unchanged('createdAt')
+        && ( !('updatedAt' in request.resource.data) || isNow('updatedAt') )
+        && validProfile(request.resource.data);
+
+      allow delete: if false; // account deletion goes through Admin SDK / Functions
+
+      // ─── Private contact info: owner only ───────────────────────────────
+      match /private_settings/{docId} {
+        allow read: if isOwner(userId);
+
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly(['email','contactNumber'])
+          && request.resource.data.keys().hasAll(['email'])
+          && request.resource.data.email == request.auth.token.email
+          && ( !('contactNumber' in request.resource.data)
+               || safeStr(request.resource.data.contactNumber, 6, 20) );
+
+        allow delete: if false;
+      }
+
+      // ─── Portfolio items (CV / projects - wired later) ──────────────────
+      match /portfolio_items/{itemId} {
+        allow get:  if true;
+        allow list: if request.query.limit <= 50;
+
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasOnly(['title','description','addedAt','linkUrl'])
+          && request.resource.data.keys().hasAll(['title','addedAt'])
+          && ( !('addedAt' in request.resource.data) || isNow('addedAt') || unchanged('addedAt') )
+          && safeStr(request.resource.data.title, 3, 100)
+          && ( !('description' in request.resource.data) || safeStr(request.resource.data.description, 0, 2000) )
+          && ( !('linkUrl' in request.resource.data) || safeUrl(request.resource.data.linkUrl) );
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ─── Profile-view events (real analytics) ───────────────────────────
+      // Only the profile owner can read their own analytics. Any verified
+      // user (other than the owner) may append exactly one view event with
+      // their own uid and a server timestamp; events are immutable.
+      match /profile_views/{viewId} {
+        allow read, list: if isOwner(userId);
+
+        allow create: if verified()
+          && request.auth.uid != userId
+          && request.resource.data.keys().hasOnly(['viewerUid','viewerRole','viewerLocation','at'])
+          && request.resource.data.keys().hasAll(['viewerUid','at'])
+          && request.resource.data.viewerUid == request.auth.uid
+          && request.resource.data.at == request.time
+          && ( !('viewerRole' in request.resource.data)
+               || request.resource.data.viewerRole in ['talent','client'] )
+          && ( !('viewerLocation' in request.resource.data)
+               || safeStr(request.resource.data.viewerLocation, 0, 80) );
+
+        allow update, delete: if false;
+      }
+
+      // ─── Reviews: clients rate talent they've worked with ───────────────
+      // Doc id == the reviewing client's uid → one editable review per client
+      // per talent. Reviews are public (non-PII: just a client display name).
+      match /reviews/{reviewId} {
+        allow read: if true;
+
+        allow create, update: if verified()
+          && request.auth.uid == reviewId
+          && request.auth.uid != userId
+          && request.resource.data.keys().hasOnly(['clientUid','clientName','rating','comment','at'])
+          && request.resource.data.keys().hasAll(['clientUid','rating','at'])
+          && request.resource.data.clientUid == request.auth.uid
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+          && request.resource.data.at == request.time
+          && ( !('comment' in request.resource.data) || safeStr(request.resource.data.comment, 0, 1000) )
+          && ( !('clientName' in request.resource.data) || safeStr(request.resource.data.clientName, 0, 120) );
+
+        allow delete: if verified() && request.auth.uid == reviewId;
+      }
+
+      // ─── Projects (client project management) ───────────────────────────
+      // The project document is owner-only. Invited students never read it -
+      // their member doc is denormalised (see the members rules below).
+      match /projects/{projectId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.clientUid == userId
+          && request.resource.data.title is string
+          && request.resource.data.title.size() <= 140
+          && ( !('description' in request.resource.data) || safeStr(request.resource.data.description, 0, 3000) )
+          && request.resource.data.status in ['ongoing','complete','archived'];
+        allow update: if isOwner(userId)
+          && request.resource.data.clientUid == userId
+          && request.resource.data.status in ['ongoing','complete','archived'];
+        allow delete: if isOwner(userId);
+
+        // Members = invited students. The owner has full control; the invited
+        // student can read & respond to (accept/decline) only their own doc.
+        match /members/{studentUid} {
+          // A meeting link, when present, must be a safe https URL (blocks
+          // javascript:/data: links that could XSS whoever clicks "join").
+          function okMeetingLink(d) {
+            return !('meetingLink' in d) || d.meetingLink == '' || safeUrl(d.meetingLink);
+          }
+          allow read: if verified() && (request.auth.uid == userId || request.auth.uid == studentUid);
+          // Creation can never pre-set the talent's signature or an onboarded
+          // state - onboarding only ever happens through the two-party signing.
+          allow create: if isOwner(userId)
+            && request.resource.data.studentUid == studentUid
+            && okMeetingLink(request.resource.data)
+            && !('talentSignedAt' in request.resource.data)
+            && !('talentSignerName' in request.resource.data)
+            && request.resource.data.get('memberState', 'active') == 'active';
+          // The project owner controls the membership. The invited student may
+          // ONLY set their invite response + their own contact, OR counter-sign
+          // the Service Agreement. The student can only flip themselves to
+          // 'onboarded' as part of signing, and only AFTER the client has signed
+          // (resource.data.clientSignedAt is set) - never mark themselves paid or
+          // inject a meeting link.
+          allow update: if verified() && (
+               ( request.auth.uid == userId
+                 && okMeetingLink(request.resource.data)
+                 // The owner can NEVER write the talent's signature fields.
+                 && !('talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys())
+                 && !('talentSignerName' in request.resource.data.diff(resource.data).affectedKeys())
+                 // The owner can't force 'onboarded' - that state is only reached
+                 // through the talent's counter-signature.
+                 && ( !('memberState' in request.resource.data.diff(resource.data).affectedKeys())
+                      || request.resource.data.memberState in ['active','dismissed'] )
+                 // The owner's own signature must be the server clock + a sane name.
+                 && ( !('clientSignedAt' in request.resource.data.diff(resource.data).affectedKeys())
+                      || request.resource.data.clientSignedAt == request.time )
+                 && ( !('clientSignerName' in request.resource.data.diff(resource.data).affectedKeys())
+                      || safeStr(request.resource.data.clientSignerName, 0, 120) ) )
+            || ( request.auth.uid == studentUid
+                 && request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['inviteStatus','studentEmail','studentPhone','respondedAt','talentSignedAt','talentSignerName','memberState','onboardedAt'])
+                 && request.resource.data.inviteStatus in ['pending','accepted','declined']
+                 && ( !('studentEmail' in request.resource.data) || safeStr(request.resource.data.studentEmail, 0, 160) )
+                 && ( !('studentPhone' in request.resource.data) || safeStr(request.resource.data.studentPhone, 0, 40) )
+                 && ( !('talentSignerName' in request.resource.data) || safeStr(request.resource.data.talentSignerName, 0, 120) )
+                 // Signing timestamps must be the server clock.
+                 && ( !( 'talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys() ) || request.resource.data.talentSignedAt == request.time )
+                 && ( !( 'onboardedAt' in request.resource.data.diff(resource.data).affectedKeys() ) || request.resource.data.onboardedAt == request.time )
+                 // The student may only move memberState to 'onboarded', and only
+                 // by signing, once the client has already signed.
+                 && ( !( 'memberState' in request.resource.data.diff(resource.data).affectedKeys() )
+                      || ( request.resource.data.memberState == 'onboarded'
+                           && ( 'talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys() )
+                           && resource.data.get('clientSignedAt', null) != null ) ) )
+          );
+          allow delete: if isOwner(userId);
+        }
+      }
+    }
+
+    // ─── Collection-group read for catalog star aggregates ──────────────────
+    // Lets a single collectionGroup('reviews') query power grid ratings.
+    match /{path=**}/reviews/{reviewId} {
+      allow read: if true;
+    }
+
+    // ─── Collection-group read: a student reads their OWN project invitations ──
+    // Powers listMyInvites (collectionGroup('members') where studentUid == me).
+    // Must gate on the studentUid FIELD (not the doc-id wildcard): the query
+    // filters by the field, and Firestore only allows the collection-group query
+    // when the rule condition matches that filter - otherwise it's rejected and
+    // no invitations load at all.
+    match /{path=**}/members/{memberId} {
+      allow read: if verified() && resource.data.studentUid == request.auth.uid;
+    }
+
+    // ─── /jobs/{jobId} - client job posts (talent browses) ──────────────────
+    match /jobs/{jobId} {
+      function jobKeys() {
+        return ['clientUid','clientName','clientOrg','title','field','description',
+                'budget','budgetType','timeline','skills','status','createdAt','updatedAt',
+                'projectId','projectName'];
+      }
+      function validJob(d) {
+        return d.clientUid == request.auth.uid
+          && d.status in ['open','closed']
+          && safeStr(d.title, 3, 120)
+          && d.field in ['dev','data','sec','cloud','support','design']
+          && safeStr(d.description, 10, 2000)
+          && d.budget is number && d.budget >= 0 && d.budget <= 100000000
+          && d.budgetType in ['fixed','hourly']
+          && ( !('clientName' in d) || safeStr(d.clientName, 0, 120) )
+          && ( !('clientOrg' in d)  || safeStr(d.clientOrg, 0, 160) )
+          && ( !('timeline' in d)   || safeStr(d.timeline, 0, 40) )
+          && ( !('skills' in d)     || (d.skills is list && d.skills.size() <= 30) )
+          && ( !('projectId' in d)  || safeStr(d.projectId, 0, 200) )
+          && ( !('projectName' in d)|| safeStr(d.projectName, 0, 140) );
+      }
+      allow get:  if true;
+      allow list: if request.query.limit <= 60;
+
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(jobKeys())
+        && request.resource.data.keys().hasAll(['clientUid','title','field','description','budget','budgetType','status','createdAt'])
+        && isNow('createdAt')
+        && ( !('updatedAt' in request.resource.data) || isNow('updatedAt') )
+        && validJob(request.resource.data);
+
+      allow update: if verified()
+        && resource.data.clientUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(jobKeys())
+        && unchanged('clientUid') && unchanged('createdAt')
+        && ( !('updatedAt' in request.resource.data) || isNow('updatedAt') )
+        && validJob(request.resource.data);
+
+      allow delete: if verified() && resource.data.clientUid == request.auth.uid;
+    }
+
+    // ─── /proposals/{id} - talent applications to a job ─────────────────────
+    // Readable only by the applicant (talentUid) or the hiring client (clientUid).
+    // Owner-scoped queries (where talentUid==me / where clientUid==me) satisfy this.
+    match /proposals/{proposalId} {
+      allow read: if verified()
+        && ( resource.data.talentUid == request.auth.uid
+             || resource.data.clientUid == request.auth.uid );
+
+      allow create: if verified()
+        && request.resource.data.talentUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['jobId','clientUid','talentUid','talentName','talentField','jobTitle','note','status','createdAt'])
+        && request.resource.data.keys().hasAll(['jobId','clientUid','talentUid','status','createdAt'])
+        && isNow('createdAt')
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.clientUid != request.auth.uid
+        && safeStr(request.resource.data.jobId, 1, 200)
+        && safeStr(request.resource.data.clientUid, 1, 200)
+        && ( !('note' in request.resource.data) || safeStr(request.resource.data.note, 0, 1000) )
+        && ( !('talentName' in request.resource.data) || safeStr(request.resource.data.talentName, 0, 120) );
+
+      // The hiring client moves an application through the pipeline.
+      allow update: if verified()
+        && resource.data.clientUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['jobId','clientUid','talentUid','talentName','talentField','jobTitle','note','status','createdAt','respondedAt'])
+        && unchanged('jobId') && unchanged('clientUid') && unchanged('talentUid') && unchanged('createdAt')
+        && request.resource.data.status in ['submitted','viewed','interview','offer','accepted','declined'];
+
+      allow delete: if false;
+    }
+
+    // ─── /conversations/{cid} - 1:1 chat threads (client ↔ talent) ──────────
+    // cid is the deterministic sorted pair "uidA__uidB". A doc is readable and
+    // writable only by its two participants. No PII beyond display names.
+    match /conversations/{cid} {
+      function meIn(d)  { return request.auth.uid in d.participants; }
+      function convKeys() {
+        return ['participants','names','roles','unread','lastText','lastSender','lastAt','createdAt','readAt'];
+      }
+      // Both get + list are gated on membership; the client query is
+      // where('participants','array-contains', uid) so every returned doc qualifies.
+      // `resource == null` allows a get() on a not-yet-created conversation (the
+      // openConversation existence check) - without it that read is denied and the
+      // thread can never be created, so messages/notifications never arrive.
+      allow read: if verified() && (resource == null || meIn(resource.data));
+
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(convKeys())
+        && request.resource.data.keys().hasAll(['participants','lastAt','createdAt'])
+        && request.resource.data.participants is list
+        && request.resource.data.participants.size() == 2
+        && meIn(request.resource.data)
+        && isNow('createdAt') && isNow('lastAt')
+        && ( !('lastText' in request.resource.data) || safeMsg(request.resource.data.lastText, 0, 200) );
+
+      // Participants may update the running summary (last message + unread counts).
+      // The participant list itself is immutable.
+      allow update: if verified()
+        && meIn(resource.data)
+        && request.resource.data.keys().hasOnly(convKeys())
+        && request.resource.data.participants == resource.data.participants
+        && unchanged('createdAt')
+        && ( !('lastText' in request.resource.data) || safeMsg(request.resource.data.lastText, 0, 200) )
+        && ( !('lastAt' in request.resource.data) || isNow('lastAt') || unchanged('lastAt') );
+
+      allow delete: if false;
+
+      // ─── Messages within a thread ───────────────────────────────────────
+      // Each message carries a denormalised participants[] (used to validate
+      // create). READS, however, must gate on the PARENT conversation's
+      // participants - a constant across the subcollection - so the streaming
+      // list query (orderBy at, no per-doc participants filter) is provably safe.
+      // Gating reads on each message's own participants field would make Firestore
+      // reject the whole list query ("rules are not filters"), so the thread would
+      // come back empty on a fresh load (e.g. after logging out and back in).
+      match /messages/{mid} {
+        function parent() { return get(/databases/$(database)/documents/conversations/$(cid)).data; }
+        // Optional file attachment: any file type, up to 10 MB. The bytes live in
+        // Storage (chat/{cid}/...); this just records the download URL + metadata.
+        function validFile(f) {
+          return f is map
+            && f.keys().hasOnly(['url','name','size','type'])
+            && f.keys().hasAll(['url','name','size','type'])
+            && safeUrl(f.url)
+            && f.name is string && f.name.size() >= 1 && f.name.size() <= 200
+            && f.size is int && f.size > 0 && f.size <= 10 * 1024 * 1024
+            && f.type is string && f.type.size() <= 200;
+        }
+        // Multi-file messages: `files` is a list of 1-5 validFile maps (rules
+        // can't loop, so elements are validated by index up to the cap).
+        function validFiles(l) {
+          return l is list && l.size() >= 1 && l.size() <= 5
+            && validFile(l[0])
+            && ( l.size() < 2 || validFile(l[1]) )
+            && ( l.size() < 3 || validFile(l[2]) )
+            && ( l.size() < 4 || validFile(l[3]) )
+            && ( l.size() < 5 || validFile(l[4]) );
+        }
+        function hasContent(d) {
+          return d.text.size() >= 1 || 'file' in d || 'files' in d;
+        }
+        allow read: if verified() && request.auth.uid in parent().participants;
+        allow create: if verified()
+          && request.resource.data.keys().hasOnly(['senderUid','text','at','participants','file','files'])
+          && request.resource.data.keys().hasAll(['senderUid','text','at','participants'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.at == request.time
+          && safeMsg(request.resource.data.text, 0, 4000)
+          // A message must carry text, attachment(s), or both - never empty.
+          && hasContent(request.resource.data)
+          && ( !('file' in request.resource.data) || validFile(request.resource.data.file) )
+          && ( !('files' in request.resource.data) || validFiles(request.resource.data.files) )
+          && request.auth.uid in parent().participants
+          && request.resource.data.participants == parent().participants;
+
+        // The AUTHOR can edit their own message within 60 seconds, or delete it
+        // for everyone (soft-delete tombstone). ANY participant can hide a
+        // message for themselves only (delete-for-me: appends their own uid to
+        // hiddenFor; the other person still sees the message). No branch may
+        // touch senderUid, at, or participants.
+        function fileUnchanged() {
+          return ( !('file' in resource.data) && !('file' in request.resource.data) )
+            || ( 'file' in resource.data && 'file' in request.resource.data
+                 && request.resource.data.file == resource.data.file );
+        }
+        function filesUnchanged() {
+          return ( !('files' in resource.data) && !('files' in request.resource.data) )
+            || ( 'files' in resource.data && 'files' in request.resource.data
+                 && request.resource.data.files == resource.data.files );
+        }
+        allow update: if verified()
+          && request.resource.data.senderUid == resource.data.senderUid
+          && request.resource.data.at == resource.data.at
+          && request.resource.data.participants == resource.data.participants
+          && (
+               ( resource.data.senderUid == request.auth.uid
+                 && (
+                      // (a) Edit text within 60s - attachments stay the same.
+                      // (hiddenFor may already exist if the receiver hid it.)
+                      (
+                        request.resource.data.keys().hasOnly(['senderUid','text','at','participants','file','files','editedAt','hiddenFor'])
+                        && !('deleted' in request.resource.data)
+                        && request.time < resource.data.at + duration.value(60,'s')
+                        && safeMsg(request.resource.data.text, 0, 4000)
+                        && hasContent(request.resource.data)
+                        && fileUnchanged()
+                        && filesUnchanged()
+                        && ( !('editedAt' in request.resource.data) || isNow('editedAt') )
+                        && ( !('hiddenFor' in request.resource.data.diff(resource.data).affectedKeys()) )
+                      )
+                      ||
+                      // (b) Soft-delete for everyone: tombstone, drop attachments.
+                      // (editedAt may linger if edited before deletion.)
+                      (
+                        request.resource.data.keys().hasOnly(['senderUid','text','at','participants','deleted','editedAt','hiddenFor'])
+                        && request.resource.data.deleted == true
+                        && request.resource.data.text == ''
+                        && ( !('hiddenFor' in request.resource.data.diff(resource.data).affectedKeys()) )
+                      )
+                    ) )
+               ||
+               // (c) Delete-for-me: any participant may append ONLY their own uid
+               // to hiddenFor; nothing else changes.
+               (
+                 request.auth.uid in resource.data.participants
+                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hiddenFor'])
+                 && request.resource.data.hiddenFor is list
+                 && request.resource.data.hiddenFor.hasAll(resource.data.get('hiddenFor', []))
+                 && request.resource.data.hiddenFor.hasOnly(resource.data.get('hiddenFor', []).concat([request.auth.uid]))
+               )
+             );
+        allow delete: if false;
+      }
+    }
+
+    // ─── /presence/{uid} - online / last-seen heartbeat ────────────────────
+    // Only the owner stamps their own lastActive (must be the server clock, no
+    // other fields). Any verified user can read it to show an online dot / last seen.
+    match /presence/{uid} {
+      allow read: if verified();
+      allow create, update: if verified()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['lastActive'])
+        && isNow('lastActive');
+      allow delete: if false;
+    }
+
+    // ─── /usernames/{handle} - unique handle registry ──────────────────────
+    // Doc id == the lowercase handle. Claiming a handle is create-only, so a
+    // handle that already exists can't be taken over (update is denied). The
+    // owner can release (delete) their own handle when changing it.
+    match /usernames/{handle} {
+      allow get:  if true;   // availability checks + handle → uid lookups
+      allow list: if false;
+      allow create: if verified()
+        && request.resource.data.keys().hasOnly(['uid','createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && isNow('createdAt')
+        && handle.matches('^[a-z0-9._]{3,30}$');
+      allow update: if false;
+      allow delete: if verified() && resource.data.uid == request.auth.uid;
+    }
+
+    // ─── Global deny ───────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

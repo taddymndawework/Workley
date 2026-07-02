@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Signing in…</title>
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--grey-bg); }
+  .callback-box { text-align: center; background: #fff; padding: 40px; border-radius: 16px; box-shadow: var(--shadow-sm); max-width: 400px; }
+  .spinner { width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h2 { color: var(--ink); margin: 0 0 10px; }
+  p { color: var(--muted); font-size: 0.9rem; }
+  .error { color: #dc2626; background: #fee2e2; padding: 12px; border-radius: 8px; margin-top: 20px; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+
+<div class="callback-box">
+  <div class="spinner"></div>
+  <h2>Signing you in…</h2>
+  <p id="status">Processing your Google account…</p>
+  <div id="error" class="error" style="display:none;"></div>
+</div>
+
+<script>
+// This page receives the OAuth callback from Google.
+// URL will look like: /oauth-callback.html?code=...&state=...
+// In production, you'd send the 'code' to your backend, which exchanges it for a real user token.
+
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+const error = params.get('error');
+const state = params.get('state');
+
+const statusEl = document.getElementById('status');
+const errorEl = document.getElementById('error');
+
+if(error){
+  statusEl.textContent = 'Google sign-in was cancelled.';
+  errorEl.style.display = 'block';
+  errorEl.textContent = 'Error: ' + error;
+  setTimeout(() => window.location.href = '/', 3000);
+} else if(!code){
+  statusEl.textContent = 'No authorization code received.';
+  errorEl.style.display = 'block';
+  errorEl.textContent = 'Something went wrong. Try again.';
+  setTimeout(() => window.location.href = '/', 3000);
+} else {
+  // ──────────────────────────────────────────────────────────────────
+  // CRITICAL: In production, send the 'code' to your BACKEND here.
+  // Your backend:
+  //   1. Exchanges code for an access_token at Google's token endpoint
+  //   2. Uses the token to fetch user profile (email, name, etc.)
+  //   3. Creates or finds the user in your database
+  //   4. Returns a session/JWT to the client
+  //   5. Client stores it and redirects to home
+  // 
+  // For now, this is a placeholder that shows what needs to happen.
+  // ──────────────────────────────────────────────────────────────────
+  
+  statusEl.textContent = '(In production) Exchanging code with your backend…';
+  
+  // Simulated backend call (replace this with your real endpoint)
+  const backendExchange = async () => {
+    try {
+      // TODO: Replace with your backend URL
+      const backendUrl = 'http://localhost:5000/api/auth/google/callback';
+      const response = await fetch(backendUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, state })
+      });
+      
+      if(!response.ok) throw new Error('Backend exchange failed');
+      const data = await response.json();
+      
+      // Backend should return user data + session token
+      // Store it and redirect
+      sessionStorage.setItem('workley_user', JSON.stringify(data.user));
+      sessionStorage.setItem('workley_token', data.token);
+      window.location.href = '/';
+    } catch(err){
+      statusEl.textContent = 'Sign-in failed.';
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Backend error: ' + err.message + '\n(See console for details. You need to set up your backend OAuth handler.)';
+      console.error(err);
+      setTimeout(() => window.location.href = '/', 4000);
+    }
+  };
+  
+  // Uncomment the line below once you have a backend set up
+  // backendExchange();
+  
+  // For now, just show the code and instructions
+  statusEl.innerHTML = `
+    <strong>OAuth Code received:</strong><br>
+    <code style="font-size:0.75rem; word-break:break-all; display:block; margin:10px 0; padding:10px; background:var(--grey-100); border-radius:4px; color:var(--muted);">${code}</code>
+    <strong>Next step:</strong> Set up your backend to exchange this code for a user session.<br>
+    <a href="/" style="color:var(--blue); font-weight:700; text-decoration:underline;">Go home</a>
+  `;
+}
+</script>
+
+</body>
+</html>

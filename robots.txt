@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard.html
+Disallow: /onboarding.html
+Disallow: /profile.html
+Disallow: /verify-email.html
+Disallow: /reset-password.html
+Disallow: /oauth-callback.html
+
+Sitemap: https://workley.co.za/sitemap.xml

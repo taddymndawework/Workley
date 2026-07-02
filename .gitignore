@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Firebase local state and caches
+.firebase/
+.runtimeconfig.json
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Secrets - never commit credentials of any kind
+.env
+.env.*
+serviceAccount*.json
+*.pem
+*.key
+
+# Local tooling
+.claude/
+.DS_Store
+Thumbs.db
+*.log
+
+# Internal working notes (not part of the product)
+Due Changes.txt
+Due Changes - 2.txt
+Workley/

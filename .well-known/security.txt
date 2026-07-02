@@ -1,0 +1,6 @@
+Contact: mailto:hello@workley.co.za
+Contact: mailto:privacy@workley.co.za
+Expires: 2027-07-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://workley.co.za/.well-known/security.txt
+Policy: https://workley.co.za/terms.html

@@ -1,0 +1,108 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── 1. AUTH GATES ────────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+    // Email verification matches the rest of the site's policy.
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+    function isOwner(uid) {
+      return verified() && request.auth.uid == uid;
+    }
+
+    // ─── 2. PAYLOAD VALIDATORS ────────────────────────────────────────────
+    function isUnderSize(maxMB) {
+      return request.resource.size <= (maxMB * 1024 * 1024);
+    }
+    function isSafeImage() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+    // Custom metadata only. HTTP-level metadata like contentType and
+    // cacheControl live elsewhere on request.resource - they're allowed.
+    function hasNoCustomMetadata() {
+      return request.resource.metadata == null || request.resource.metadata.size() == 0;
+    }
+    // Strict filename: no path traversal, no whitespace, alphanumerics only.
+    function isSafeFileName(fileName) {
+      return fileName.matches('^[a-zA-Z0-9_-]+\\.(png|jpg|jpeg|webp)$');
+    }
+    // Portfolio files: images OR documents (PDF / Word).
+    function isSafePortfolioName(fileName) {
+      return fileName.matches('^[a-zA-Z0-9_-]+\\.(png|jpg|jpeg|webp|pdf|doc|docx)$');
+    }
+    function isSafePortfolioType() {
+      return request.resource.contentType.matches('image/(jpeg|png|webp)')
+        || request.resource.contentType == 'application/pdf'
+        || request.resource.contentType == 'application/msword'
+        || request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    }
+
+    // ─── (Optional) GHOST USER CHECK ──────────────────────────────────────
+    // Re-enable this once you start writing /users/{uid} documents in Firestore.
+    // It blocks uploads from users who exist in Auth but have been removed
+    // from your application database.
+    //
+    //   function isValidDatabaseUser(uid) {
+    //     let userDoc = firestore.get(/databases/(default)/documents/users/$(uid));
+    //     return userDoc != null && userDoc.data.role in ['talent','client'];
+    //   }
+    //
+    // Append `&& isValidDatabaseUser(uid)` to each allow rule below when ready.
+
+    // ─── 3. PROFILE PICTURES ──────────────────────────────────────────────
+    match /users/{uid}/avatar/{fileName} {
+
+      // Anyone signed in (and verified) can view avatars - needed so other
+      // verified users see profile pictures across the marketplace.
+      allow read: if verified();
+
+      // Owner can create or replace their avatar with strict validation.
+      allow create, update: if isOwner(uid)
+        && isSafeFileName(fileName)
+        && isSafeImage()
+        && isUnderSize(5)
+        && hasNoCustomMetadata();
+
+      // Owner can delete their own avatar.
+      allow delete: if isOwner(uid);
+    }
+
+    // ─── 3b. PORTFOLIO FILES (CV / certificates / work samples) ───────────
+    // Up to 3 enforced client-side; rules enforce owner + type + size.
+    match /users/{uid}/portfolio/{fileName} {
+
+      // Any verified user can view a talent's portfolio in the catalog.
+      allow read: if verified();
+
+      allow create, update: if isOwner(uid)
+        && isSafePortfolioName(fileName)
+        && isSafePortfolioType()
+        && isUnderSize(10)
+        && hasNoCustomMetadata();
+
+      allow delete: if isOwner(uid);
+    }
+
+    // ─── 3c. CHAT ATTACHMENTS (any file type, ≤10 MB) ─────────────────────
+    // Stored under chat/{cid}/{uid}/{fileName}. The {uid} segment ties each
+    // upload to its author, so a user can only write under their own folder.
+    // Any verified user can read (download URLs are only shared inside a thread,
+    // matching how avatars/portfolio are read-open to verified users).
+    match /chat/{cid}/{uid}/{fileName} {
+      allow read: if verified();
+      allow create: if isOwner(uid)
+        && isUnderSize(10)
+        && hasNoCustomMetadata();
+      allow delete: if isOwner(uid);
+    }
+
+    // ─── 4. FAILSAFE GLOBAL DENY ──────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
