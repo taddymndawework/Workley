@@ -829,12 +829,12 @@
   window.dashViewStudentProfile = function(uid){ if(typeof openProfile==='function') openProfile(uid); };
 
   // ── Celebration when a student is onboarded ──
-  function celebrateOnboard(name){
+  function celebrateOnboard(name, msg){
     let el = document.getElementById('celebrateLayer'); if(el) el.remove();
     el = document.createElement('div'); el.id='celebrateLayer'; el.className='celebrate-layer';
     const colors=['#3D6BF0','#2247B5','#22c55e','#f59e0b','#ec4899','#06b6d4'];
     let confetti=''; for(let i=0;i<46;i++){ const c=colors[i%colors.length]; const left=(Math.random()*100).toFixed(1); const delay=(Math.random()*0.35).toFixed(2); const dur=(1.5+Math.random()*1.3).toFixed(2); confetti+=`<i style="left:${left}%;background:${c};animation-delay:${delay}s;animation-duration:${dur}s"></i>`; }
-    el.innerHTML = `<div class="celebrate-confetti">${confetti}</div><div class="celebrate-badge"><span class="celebrate-check">${I.check}</span><div><strong>Onboarded!</strong><span>${esc(name)} has joined the project 🎉</span></div></div>`;
+    el.innerHTML = `<div class="celebrate-confetti">${confetti}</div><div class="celebrate-badge"><span class="celebrate-check">${I.check}</span><div><strong>Onboarded!</strong><span>${esc(msg || (name + ' has joined the project 🎉'))}</span></div></div>`;
     document.body.appendChild(el);
     void el.offsetWidth; el.classList.add('show');
     setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>{ if(el.parentNode) el.remove(); }, 450); }, 2600);
@@ -898,7 +898,7 @@
     const m=(MY_INVITES||[])[i]; if(!m) return;
     contractSignModal({ role:'talent', otherName:m.clientName||'the client', projectTitle:m.projectTitle||'',
       onSubmit:(name)=>{ window.firebaseDB.talentSignContract(m, name).then(ok=>{ closeModal();
-        if(ok){ MY_INVITES=null; ensureInvites(()=>paintMain()); toast('You\'re onboarded! 🎉','Both parties have signed the Service Agreement. You can now begin the work.'); }
+        if(ok){ MY_INVITES=null; ensureInvites(()=>paintMain()); celebrateOnboard('', 'You\'ve joined the project 🎉'); toast('You\'re onboarded! 🎉','Both parties have signed the Service Agreement. You can now begin the work.'); }
         else toast('Couldn\'t sign','Please try again in a moment.'); }); } });
   };
   // Read-only view of the signing status.
@@ -1968,9 +1968,15 @@
     const activeRows=active.map(m=>{
       const name=m.jobTitle||m.projectTitle||'Job';
       const extra=(m.jobTitle && m.projectTitle && m.jobTitle!==m.projectTitle)?' · '+esc(m.projectTitle):'';
+      // Payment status only shows once onboarded (both parties signed the
+      // Service Agreement); before that the engagement is contract-pending.
+      const onb = m.memberState==='onboarded';
+      const chip = onb
+        ? `<span class="dash-status ${m.paid?'st-sent':'st-viewed'}">${m.paid?'Paid':'Awaiting payment'}</span>`
+        : `<span class="dash-status st-viewed">Contract pending</span>`;
       return `<div class="dash-jobrow" data-reveal><div class="dash-jobrow-main"><strong>${esc(name)}</strong>
-        <span class="dash-td-sub">${esc(m.clientName||'Client')}${extra} · onboarded</span></div>
-        <span class="dash-status ${m.paid?'st-sent':'st-viewed'}">${m.paid?'Paid':'Awaiting payment'}</span></div>`;
+        <span class="dash-td-sub">${esc(m.clientName||'Client')}${extra} · ${onb?'onboarded':'awaiting onboarding'}</span></div>
+        ${chip}</div>`;
     }).join('');
     const historyRows=history.map(m=>{
       const name=m.jobTitle||m.projectTitle||'Job';
@@ -2183,7 +2189,7 @@
   function applicantRow(p, showJob){
     const decided = (p.status==='accepted' || p.status==='declined');
     const badge = p.status==='accepted'
-      ? `<span class="proj-state onboarded">${I.check} Accepted &amp; onboarded</span>`
+      ? `<span class="proj-state onboarded">${I.check} Accepted - onboard them in Projects</span>`
       : (p.status==='declined' ? `<span class="dash-status st-viewed">Declined</span>` : '');
     const actions = decided ? badge
       : `<button class="btn btn-outline btn-sm" onclick="dashViewStudentProfile('${p.talentUid}')">View profile</button>

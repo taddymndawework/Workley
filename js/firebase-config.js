@@ -959,12 +959,12 @@ window.firebaseDB = {
     } catch(e){ console.warn('[Workley] listProjectMembers failed:', e.code || e.message); return []; }
   },
   updateMemberState: async (clientUid, projectId, studentUid, memberState) => {
-    const allowed = ['active','onboarded','dismissed'];
+    // 'onboarded' is NOT settable here - that state is only reached through the
+    // two-party Service Agreement signing (talentSignContract), and the security
+    // rules enforce it server-side.
+    const allowed = ['active','dismissed'];
     if(!clientUid || !projectId || !studentUid || allowed.indexOf(memberState) < 0) return false;
-    // Stamp the onboarded date so it can be kept as a receipt when the project closes.
-    const upd = { memberState };
-    if(memberState === 'onboarded') upd.onboardedAt = serverTimestamp();
-    try { await updateDoc(doc(db,'users',clientUid,'projects',projectId,'members',studentUid), upd); return true; }
+    try { await updateDoc(doc(db,'users',clientUid,'projects',projectId,'members',studentUid), { memberState }); return true; }
     catch(e){ return false; }
   },
   setMemberPaid: async (clientUid, projectId, studentUid, paid) => {
