@@ -64,6 +64,10 @@
         "destination": "/refund.html"
       },
       {
+        "source": "/cancellation",
+        "destination": "/cancellation.html"
+      },
+      {
         "source": "/service-agreement",
         "destination": "/service-agreement.html"
       }

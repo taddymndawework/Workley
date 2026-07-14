@@ -26,6 +26,7 @@ import {
   deleteUser,
   reauthenticateWithPopup,
   reauthenticateWithCredential,
+  reauthenticateWithPhoneNumber,
   EmailAuthProvider
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 import {
@@ -209,6 +210,53 @@ window.firebaseAuth = {
   reauthPassword: (password) => {
     const u = auth.currentUser;
     return reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password));
+  },
+
+  // ─── SMS step-up verification (sensitive in-session actions) ────────
+  // Used to confirm it is really the account holder before a high-impact
+  // action (e.g. cancelling an engagement - see cancellation.html). Sends a
+  // one-time code to the account's verified phone and returns
+  // { phone, confirm(code) }. confirm resolves true only when Firebase
+  // accepts the code SERVER-SIDE - never trusts the typed value locally.
+  // Covers both account shapes:
+  //  - legacy accounts with a linked phone provider → true phone re-auth;
+  //  - MFA-enrolled phones → the enrolment handshake against the current
+  //    session (Firebase validates the code first; re-enrolling the same
+  //    number then reports auth/second-factor-already-in-use, which proves
+  //    the code was correct - any wrong code fails before that point).
+  // Throws { code:'workley/no-phone' } when no verified number exists, and
+  // Firebase's auth/requires-recent-login when the session is too old.
+  startSmsVerify: async () => {
+    const user = auth.currentUser;
+    if (!user) throw { code: 'workley/not-signed-in' };
+    const verifier = await window.firebaseAuth._getRecaptcha();
+    if (user.phoneNumber) {
+      const conf = await reauthenticateWithPhoneNumber(user, user.phoneNumber, verifier);
+      return { phone: user.phoneNumber, confirm: async (code) => { await conf.confirm(code); return true; } };
+    }
+    const factors = (multiFactor(user).enrolledFactors || []).filter(f => f && f.phoneNumber);
+    if (!factors.length) throw { code: 'workley/no-phone' };
+    const phone = factors[0].phoneNumber;
+    const session = await multiFactor(user).getSession();
+    const provider = new PhoneAuthProvider(auth);
+    const verificationId = await provider.verifyPhoneNumber({ phoneNumber: phone, session }, verifier);
+    return { phone, confirm: async (code) => {
+      const cred = PhoneAuthProvider.credential(verificationId, code);
+      const assertion = PhoneMultiFactorGenerator.assertion(cred);
+      try {
+        await multiFactor(user).enroll(assertion, 'My phone');
+        // Unexpected duplicate enrolment of the same number - tidy it up so the
+        // account keeps a single factor. Verification itself has succeeded.
+        try {
+          const dup = (multiFactor(user).enrolledFactors || []).filter(f => f && f.phoneNumber === phone);
+          if (dup.length > 1) await multiFactor(user).unenroll(dup[dup.length - 1]);
+        } catch (_) {}
+        return true;
+      } catch (e) {
+        if (e && e.code === 'auth/second-factor-already-in-use') return true;
+        throw e;
+      }
+    } };
   }
 };
 
@@ -960,12 +1008,32 @@ window.firebaseDB = {
   },
   updateMemberState: async (clientUid, projectId, studentUid, memberState) => {
     // 'onboarded' is NOT settable here - that state is only reached through the
-    // two-party Service Agreement signing (talentSignContract), and the security
-    // rules enforce it server-side.
+    // two-party Service Agreement signing (talentSignContract) - and neither is
+    // 'cancelled' (only cancelEngagement, which records who/when/why). The
+    // security rules enforce both server-side.
     const allowed = ['active','dismissed'];
     if(!clientUid || !projectId || !studentUid || allowed.indexOf(memberState) < 0) return false;
     try { await updateDoc(doc(db,'users',clientUid,'projects',projectId,'members',studentUid), { memberState }); return true; }
     catch(e){ return false; }
+  },
+  // ── Cancel an engagement (either party; see cancellation.html) ──
+  // Terminal: rules stamp the record with the server clock, require the acting
+  // party's own role in cancelledBy, and block any later edit or un-cancel.
+  // Callers must complete SMS step-up verification (firebaseAuth.startSmsVerify)
+  // BEFORE calling this - the UI enforces that flow.
+  cancelEngagement: async (member, byRole, reason, note) => {
+    if(!member || !member.clientUid || !member.projectId || !member.studentUid) return false;
+    if(byRole !== 'client' && byRole !== 'talent') return false;
+    try {
+      await updateDoc(doc(db,'users',member.clientUid,'projects',member.projectId,'members',member.studentUid), {
+        memberState: 'cancelled',
+        cancelledAt: serverTimestamp(),
+        cancelledBy: byRole,
+        cancelReason: String(reason || 'other').slice(0, 40),
+        cancelNote: String(note || '').slice(0, 500)
+      });
+      return true;
+    } catch(e){ console.warn('[Workley] cancelEngagement failed:', e.code || e.message); return false; }
   },
   setMemberPaid: async (clientUid, projectId, studentUid, paid) => {
     if(!clientUid || !projectId || !studentUid) return false;
@@ -1068,7 +1136,9 @@ function _memberOut(d){ const v = d.data();
     invitedAt: _ts(v.invitedAt) || new Date(0), respondedAt: _ts(v.respondedAt), acceptedAt: _ts(v.acceptedAt),
     onboardedAt: _ts(v.onboardedAt),
     clientSignedAt: _ts(v.clientSignedAt), talentSignedAt: _ts(v.talentSignedAt),
-    clientSignerName: v.clientSignerName || '', talentSignerName: v.talentSignerName || ''
+    clientSignerName: v.clientSignerName || '', talentSignerName: v.talentSignerName || '',
+    cancelledAt: _ts(v.cancelledAt), cancelledBy: v.cancelledBy || '',
+    cancelReason: v.cancelReason || '', cancelNote: v.cancelNote || ''
   };
 }
 

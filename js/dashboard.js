@@ -650,9 +650,10 @@
       : '';
     const first = esc((m.studentName||'the talent').split(' ')[0]);
     let stateRow;
-    if(onboarded) stateRow = `<span class="proj-state onboarded">${I.check} Onboarded</span><button class="proj-textbtn" onclick="dashViewContract('${proj.id}','${m.studentUid}')">Contract</button>`;
+    if(m.memberState==='cancelled') stateRow = `<span class="proj-state cancelled">${I.x} Cancelled${m.cancelledBy==='client'?' by you':m.cancelledBy==='talent'?' by '+first:''}</span><button class="proj-textbtn" onclick="dashViewCancellation('${proj.id}','${m.studentUid}')">Details</button>`;
+    else if(onboarded) stateRow = `<span class="proj-state onboarded">${I.check} Onboarded</span><button class="proj-textbtn" onclick="dashViewContract('${proj.id}','${m.studentUid}')">Contract</button><button class="proj-textbtn danger" onclick="dashCancelEngagement('${proj.id}','${m.studentUid}')">Cancel</button>`;
     else if(m.memberState==='dismissed') stateRow = `<span class="proj-state dismissed">Dismissed</span><button class="proj-textbtn" onclick="dashSetMemberActive('${proj.id}','${m.studentUid}')">Undo</button>`;
-    else if(awaitingTalent) stateRow = `<span class="proj-state pending">${I.clock} Awaiting ${first}'s signature</span><button class="proj-textbtn" onclick="dashViewContract('${proj.id}','${m.studentUid}')">View</button>`;
+    else if(awaitingTalent) stateRow = `<span class="proj-state pending">${I.clock} Awaiting ${first}'s signature</span><button class="proj-textbtn" onclick="dashViewContract('${proj.id}','${m.studentUid}')">View</button><button class="proj-textbtn danger" onclick="dashCancelEngagement('${proj.id}','${m.studentUid}')">Cancel</button>`;
     else stateRow = `<button class="btn btn-primary btn-sm" onclick="dashSignContractClient('${proj.id}','${m.studentUid}')">${I.check} Onboard</button><button class="btn btn-outline btn-sm" onclick="dashDismiss('${proj.id}','${m.studentUid}')">Dismiss</button>`;
     return `<div class="proj-member accepted ${m.memberState}${awaitingTalent?' awaiting':''}">
       <button class="proj-ava" onclick="dashFloatStudent('${proj.id}','${m.studentUid}',event)" title="View profile">${studentAvatar(m)}</button>
@@ -663,7 +664,7 @@
       </div>
       <div class="proj-member-actions">
         <button class="proj-mini-btn ${unread?'has-unread':''}" title="Message" onclick="dashMsgMember('${proj.id}','${m.studentUid}')">${I.chat}${unread?`<em class="proj-unread">${unread}</em>`:''}</button>
-        <button class="proj-mini-btn" title="Schedule meeting" onclick="dashScheduleMeeting('${proj.id}','${m.studentUid}')">${I.video}</button>
+        ${m.memberState==='cancelled' ? '' : `<button class="proj-mini-btn" title="Schedule meeting" onclick="dashScheduleMeeting('${proj.id}','${m.studentUid}')">${I.video}</button>`}
         ${onboarded ? `<button class="proj-mini-btn" title="${m.paid?'Mark unpaid':'Mark paid'}" onclick="dashTogglePaid('${proj.id}','${m.studentUid}',${m.paid?'false':'true'})">${I.money}</button>${m.paid ? `<button class="proj-mini-btn" title="Leave or edit a review" onclick="dashReviewMember('${proj.id}','${m.studentUid}')">${I.star}</button>` : ''}` : ''}
       </div>
       <div class="proj-member-state">${stateRow}</div>
@@ -716,7 +717,8 @@
       const accepted = members.filter(m=>m.inviteStatus==='accepted');
       const pending  = members.filter(m=>m.inviteStatus==='pending');
       const declined = members.filter(m=>m.inviteStatus==='declined');
-      const unpaid = accepted.filter(m=>m.memberState!=='dismissed' && !m.paid);
+      // Only onboarded talent can be paid (payment status is gated on onboarding).
+      const unpaid = accepted.filter(m=>m.memberState==='onboarded' && !m.paid);
       const payAll = unpaid.length ? `<button class="btn btn-outline btn-sm" onclick="dashPayAll('${proj.id}')">${I.money} Pay all unpaid (${unpaid.length})</button>` : '';
       body = `<div class="proj-members-bar" data-reveal>
           <button class="btn btn-primary btn-sm" onclick="dashOpenInvite('${proj.id}')">${I.plus} Invite student</button>${payAll}
@@ -743,15 +745,17 @@
     if(!list.length) return `<div class="proj-empty" data-reveal>${I.handshake}<h3>No invitations yet</h3><p>When a client invites you to a project, it'll show up here.</p></div>`;
     const card = (m,i)=>{
       const onboarded = m.memberState==='onboarded';
-      const needsSign = m.inviteStatus==='accepted' && !onboarded && !!m.clientSignedAt && !m.talentSignedAt;
+      const cancelled = m.memberState==='cancelled';
+      const needsSign = m.inviteStatus==='accepted' && !onboarded && !cancelled && !!m.clientSignedAt && !m.talentSignedAt;
       let action;
-      if(m.inviteStatus==='pending') action = `<div class="proj-inv-actions"><button class="btn btn-primary btn-sm" onclick="dashRespondInvite(${i},true)">Accept</button><button class="btn btn-outline btn-sm" onclick="dashRespondInvite(${i},false)">Decline</button></div>`;
-      else if(needsSign) action = `<div class="contract-prompt"><div class="cp-txt"><strong>${I.check} Action needed: sign your Service Agreement</strong><span>${esc((m.clientName||'The client').split(' ')[0])} has signed. Counter-sign to complete your onboarding - you're not obligated to work until then.</span></div><button class="btn btn-primary btn-sm" onclick="dashSignContractTalent(${i})">Review &amp; sign</button></div>`;
+      if(cancelled) action = `<span class="proj-badge arch">Cancelled${m.cancelledBy==='talent'?' by you':''}</span> <button class="proj-textbtn" onclick="dashViewCancellation('${m.projectId}','${m.studentUid}')">Details</button>`;
+      else if(m.inviteStatus==='pending') action = `<div class="proj-inv-actions"><button class="btn btn-primary btn-sm" onclick="dashRespondInvite(${i},true)">Accept</button><button class="btn btn-outline btn-sm" onclick="dashRespondInvite(${i},false)">Decline</button></div>`;
+      else if(needsSign) action = `<div class="contract-prompt"><div class="cp-txt"><strong>${I.check} Action needed: sign your Service Agreement</strong><span>${esc((m.clientName||'The client').split(' ')[0])} has signed. Counter-sign to complete your onboarding - you're not obligated to work until then.</span></div><button class="btn btn-primary btn-sm" onclick="dashSignContractTalent(${i})">Review &amp; sign</button></div><div class="cancel-inline"><button class="proj-textbtn danger" onclick="dashCancelEngagementTalent('${m.projectId}')">Can't take this on? Cancel the engagement</button></div>`;
       else if(m.inviteStatus==='accepted') action = onboarded ? '' : `<span class="proj-badge done">Accepted</span>`;
       else action = `<span class="proj-badge arch">Declined</span>`;
-      const meeting = m.meetingAt ? `<div class="proj-meet">${I.cal}<span>Meeting: ${m.meetingAt.toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>${m.meetingPlatform?` · ${esc(m.meetingPlatform)}`:''}${m.meetingLink?` · <a href="${esc(m.meetingLink)}" target="_blank" rel="noopener noreferrer">join</a>`:''}</div>` : '';
-      const onb = onboarded ? `<span class="proj-state onboarded">${I.check} Onboarded</span>` : '';
-      return `<div class="proj-inv-card${needsSign?' needs-sign':''}" data-reveal>
+      const meeting = (m.meetingAt && !cancelled) ? `<div class="proj-meet">${I.cal}<span>Meeting: ${m.meetingAt.toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>${m.meetingPlatform?` · ${esc(m.meetingPlatform)}`:''}${m.meetingLink?` · <a href="${esc(m.meetingLink)}" target="_blank" rel="noopener noreferrer">join</a>`:''}</div>` : '';
+      const onb = onboarded ? `<span class="proj-state onboarded">${I.check} Onboarded</span>` : (cancelled ? `<span class="proj-state cancelled">${I.x} Cancelled</span>` : '');
+      return `<div class="proj-inv-card${needsSign?' needs-sign':''}${cancelled?' cancelled':''}" data-reveal>
         <div class="proj-inv-top"><h3>${esc(m.projectTitle)||'Project'}</h3>${onb}</div>
         <div class="proj-inv-client">From ${m.clientUid?`<button type="button" class="dash-clientlink" onclick="openClientProfile('${m.clientUid}')"><strong>${esc(m.clientName)}</strong></button>`:`<strong>${esc(m.clientName)}</strong>`}</div>
         <p class="proj-inv-desc">${esc(m.projectDescription) || '<span class="dash-muted">No description.</span>'}</p>
@@ -771,11 +775,11 @@
       const activeProjects = (PROJECTS||[]).filter(p=>p.status!=='archived');
       if(activeProjects.some(p=>PROJECT_MEMBERS[p.id]==null)) return head + loadingBlock();
       activeProjects.forEach(p=>{
-        (PROJECT_MEMBERS[p.id]||[]).forEach(m=>{ if(m.meetingAt && m.inviteStatus!=='declined') list.push(Object.assign({}, m, {projectId:p.id, projectTitle:p.title})); });
+        (PROJECT_MEMBERS[p.id]||[]).forEach(m=>{ if(m.meetingAt && m.inviteStatus!=='declined' && m.memberState!=='cancelled') list.push(Object.assign({}, m, {projectId:p.id, projectTitle:p.title})); });
       });
     } else {
       if(MY_INVITES==null) return head + loadingBlock();
-      (MY_INVITES||[]).forEach(m=>{ if(m.meetingAt) list.push(m); });
+      (MY_INVITES||[]).forEach(m=>{ if(m.meetingAt && m.memberState!=='cancelled') list.push(m); });
     }
     list.sort((a,b)=> (a.meetingAt?a.meetingAt.getTime():0) - (b.meetingAt?b.meetingAt.getTime():0));
     if(!list.length){
@@ -919,8 +923,180 @@
     showOverlay();
   };
   window.dashDismiss = function(projectId, studentUid){ const uid=_uid(); window.firebaseDB.updateMemberState(uid,projectId,studentUid,'dismissed').then(ok=>{ if(ok){ PROJECT_MEMBERS[projectId]=null; ensureProjectMembers(projectId,()=>paintMain()); toast('Student dismissed',''); } }); };
+
+  // ── Engagement cancellation (self-service; policy: cancellation.html) ──
+  // Deliberately quiet UI: cancelling is always available but never promoted.
+  // The flow is: consequences + reason + "I understand" → one-time SMS code to
+  // the account's verified phone → only then is the engagement cancelled.
+  // Keys must stay in sync with the cancelReason enum in firestore.rules.
+  const CANCEL_REASONS = [
+    ['scope',        'Scope or requirements changed'],
+    ['budget',       'Budget changed'],
+    ['timeline',     'The timeline no longer works'],
+    ['unresponsive', 'The other party is unresponsive'],
+    ['quality',      'The engagement is not working out'],
+    ['workload',     'No longer have the capacity'],
+    ['personal',     'Personal or unforeseen circumstances'],
+    ['other',        'Other']
+  ];
+  function cancelReasonLabel(key){ const r=CANCEL_REASONS.find(x=>x[0]===key); return r ? r[1] : 'Other'; }
+  let _cancelCtx = null;   // { m, role, reason, note, verify } for the in-flight flow
+
+  window.dashCancelEngagement = function(projectId, studentUid){
+    const m=(PROJECT_MEMBERS[projectId]||[]).find(x=>x.studentUid===studentUid); if(!m) return;
+    cancelModalStep1(Object.assign({}, m, { clientUid:_uid(), projectId }), 'client');
+  };
+  window.dashCancelEngagementTalent = function(projectId){
+    const m=(MY_INVITES||[]).find(x=>x.projectId===projectId); if(!m) return;
+    if(!m.clientUid){ toast('Not available','Please refresh and try again.'); return; }
+    cancelModalStep1(m, 'talent');
+  };
+  function cancelModalStep1(m, role){
+    _cancelCtx = { m, role, reason:'', note:'', verify:null };
+    const other = role==='client' ? (m.studentName||'the talent') : (m.clientName||'the client');
+    const first = esc(other.split(' ')[0]);
+    const title = m.jobTitle || m.projectTitle || 'this engagement';
+    const onboarded = m.memberState==='onboarded';
+    const points = role==='client'
+      ? (onboarded
+          ? ['Work '+first+' has properly done so far must still be paid for.',
+             'Work not yet done falls away - deliverables you\'ve paid for are yours.',
+             first+' is notified immediately and stops working.',
+             'This can\'t be undone. To work together again, send a new invite.']
+          : ['No payment is due - onboarding was never completed.',
+             first+' is notified immediately.',
+             'This can\'t be undone. To work together again, send a new invite.'])
+      : (onboarded
+          ? ['You stay entitled to payment for work you\'ve properly done so far.',
+             'Hand over any work the client has already paid for.',
+             first+' is notified immediately.',
+             'This can\'t be undone - the client would need to re-invite you.']
+          : ['You\'re not obligated to any work - onboarding was never completed.',
+             first+' is notified immediately.',
+             'This can\'t be undone - the client would need to re-invite you.']);
+    const opts = CANCEL_REASONS.map(r=>`<option value="${r[0]}">${esc(r[1])}</option>`).join('');
+    document.getElementById('modal').classList.remove('auth-modal');
+    document.getElementById('modal').innerHTML = `
+      <div class="modal-head"><div><h3 style="font-size:1.2rem">Cancel this engagement?</h3><div style="font-size:.85rem;color:var(--muted);margin-top:3px">${esc(title)} · with ${esc(other)}</div></div><button class="modal-x" onclick="closeModal()" aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <div class="contract-note">Before you continue, here's what cancelling means (<a href="cancellation.html" target="_blank" rel="noopener">Cancellation Policy</a>):</div>
+        <ul class="contract-points">${points.map(p=>`<li>${p}</li>`).join('')}</ul>
+        <div class="form-field" style="margin-top:14px"><label for="ceReason">Reason for cancelling</label>
+          <select id="ceReason"><option value="" selected disabled>Select a reason…</option>${opts}</select></div>
+        <div class="form-field" style="margin-top:12px"><label for="ceNote">Add a note for ${first} <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+          <textarea id="ceNote" rows="2" maxlength="500" placeholder="Anything that helps ${first} understand"></textarea></div>
+        <label class="check-row" style="margin-top:10px"><input type="checkbox" id="ceAgree"> <span>I understand the consequences above and that this cancellation is final and recorded.</span></label>
+        <div class="auth-error" id="ceErr"></div>
+        <button class="btn btn-primary btn-block btn-lg" style="margin-top:14px" onclick="closeModal()">Keep the engagement</button>
+        <button class="btn btn-outline btn-block cancel-danger-btn" style="margin-top:10px" onclick="dashCancelContinue()">Continue to cancellation</button>
+      </div>`;
+    showOverlay();
+  }
+  window.dashCancelContinue = function(){
+    const reason=(document.getElementById('ceReason')||{}).value||'';
+    const note=((document.getElementById('ceNote')||{}).value||'').trim();
+    const agree=(document.getElementById('ceAgree')||{}).checked;
+    const err=(t)=>{ const e=document.getElementById('ceErr'); if(e){ e.textContent=t; e.style.display='block'; } };
+    if(!_cancelCtx) return;
+    if(!reason){ err('Please select a reason for cancelling.'); return; }
+    if(!agree){ err('Please confirm you understand the consequences.'); return; }
+    _cancelCtx.reason=reason; _cancelCtx.note=note;
+    cancelModalStep2();
+    dashCancelSendCode();
+  };
+  function cancelModalStep2(){
+    document.getElementById('modal').innerHTML = `
+      <div class="modal-head"><div><h3 style="font-size:1.2rem">Confirm it's you</h3><div style="font-size:.85rem;color:var(--muted);margin-top:3px">For your security, cancelling requires SMS verification.</div></div><button class="modal-x" onclick="closeModal()" aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <p style="font-size:.9rem;color:var(--ink-soft);margin:0 0 14px" id="ceSmsMsg">Sending a one-time code to your verified phone…</p>
+        <div class="form-field" id="ce-code"><label for="ceCode">6-digit code</label><input id="ceCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••"></div>
+        <div class="auth-error" id="ceErr2"></div>
+        <button class="btn btn-danger btn-block btn-lg" style="margin-top:14px" id="ceConfirmBtn" onclick="dashCancelConfirm()">Verify &amp; cancel engagement</button>
+        <div class="auth-switch">Didn't get it? <button onclick="dashCancelSendCode()">Resend code</button></div>
+        <button class="btn btn-outline btn-block" style="margin-top:10px" onclick="closeModal()">Keep the engagement</button>
+      </div>`;
+    setTimeout(()=>{ const i=document.getElementById('ceCode'); if(i) i.focus(); },120);
+  }
+  function _ceSmsErr(err){
+    const el=document.getElementById('ceErr2'); if(!el) return;
+    const code=(err&&err.code)||'';
+    let msg;
+    if(code==='workley/no-phone') msg='Your account has no verified phone number. Email hello@workley.co.za from your account email and we\'ll verify you another way.';
+    else if(code==='auth/requires-recent-login') msg='For security, please log out, log back in, and try again.';
+    else msg=(typeof smsErrorMessage==='function' && smsErrorMessage(err)) || 'Couldn\'t send the code. Please try again shortly.';
+    el.textContent=msg; el.style.display='block';
+  }
+  window.dashCancelSendCode = function(){
+    if(!_cancelCtx) return;
+    if(!window.firebaseAuth || !window.firebaseAuth.startSmsVerify){ _ceSmsErr({}); return; }
+    if(typeof ensureRecaptchaContainer==='function') ensureRecaptchaContainer();
+    if(window.firebaseAuth.resetRecaptcha) window.firebaseAuth.resetRecaptcha();
+    const msgEl=document.getElementById('ceSmsMsg');
+    window.firebaseAuth.startSmsVerify().then(v=>{
+      _cancelCtx.verify=v;
+      const p=String(v.phone||''); const masked=p? (p.slice(0,3)+'•••••'+p.slice(-3)) : 'your phone';
+      if(msgEl) msgEl.innerHTML='We sent a 6-digit code by SMS to <strong>'+esc(masked)+'</strong>. Enter it below to confirm the cancellation.';
+    }).catch(err=>{
+      if(window.firebaseAuth.resetRecaptcha) window.firebaseAuth.resetRecaptcha();
+      if(msgEl) msgEl.textContent='We couldn\'t send the code.';
+      _ceSmsErr(err);
+    });
+  };
+  window.dashCancelConfirm = function(){
+    if(!_cancelCtx) return;
+    const inp=document.getElementById('ceCode');
+    const code=(inp?inp.value:'').trim();
+    const errEl=document.getElementById('ceErr2');
+    const fail=(t)=>{ const b=document.getElementById('ceConfirmBtn'); if(b){ b.disabled=false; b.innerHTML='Verify &amp; cancel engagement'; } if(errEl){ errEl.textContent=t; errEl.style.display='block'; } };
+    if(!/^\d{6}$/.test(code)){ const f=document.getElementById('ce-code'); if(f) f.classList.add('err'); return; }
+    const f=document.getElementById('ce-code'); if(f) f.classList.remove('err');
+    if(!_cancelCtx.verify){ fail('The code hasn\'t been sent yet - tap "Resend code".'); return; }
+    const btn=document.getElementById('ceConfirmBtn'); if(btn){ btn.disabled=true; btn.textContent='Verifying…'; }
+    const ctx=_cancelCtx;
+    ctx.verify.confirm(code)
+      .then(()=> window.firebaseDB.cancelEngagement(ctx.m, ctx.role, ctx.reason, ctx.note))
+      .then(ok=>{
+        if(window.firebaseAuth.resetRecaptcha) window.firebaseAuth.resetRecaptcha();
+        if(!ok){ fail('Verified, but the cancellation couldn\'t be saved. Please try again.'); return; }
+        _cancelCtx=null; closeModal();
+        const other = ctx.role==='client' ? (ctx.m.studentName||'The talent') : (ctx.m.clientName||'The client');
+        toast('Engagement cancelled', other.split(' ')[0]+' has been notified. The record is kept for both of you.');
+        if(ctx.role==='client'){ PROJECT_MEMBERS[ctx.m.projectId]=null; ensureProjectMembers(ctx.m.projectId,()=>paintMain()); }
+        else { MY_INVITES=null; ensureInvites(()=>paintMain()); }
+      })
+      .catch(err=>{
+        const c=(err&&err.code)||'';
+        if(c==='auth/invalid-verification-code') fail('That code is incorrect. Please try again.');
+        else if(c==='auth/code-expired') fail('That code expired. Tap "Resend code" for a new one.');
+        else fail((typeof smsErrorMessage==='function' && smsErrorMessage(err)) || 'Verification failed. Please resend a new code.');
+      });
+  };
+  // Read-only view of a cancellation record (both parties can see who/when/why).
+  window.dashViewCancellation = function(projectId, studentUid){
+    let m=null, meClient=false;
+    if(PROJECT_MEMBERS[projectId]){ m=(PROJECT_MEMBERS[projectId]||[]).find(x=>x.studentUid===studentUid); meClient=!!m; }
+    if(!m) m=(MY_INVITES||[]).find(x=>x.projectId===projectId);
+    if(!m || m.memberState!=='cancelled') return;
+    const byMe = (m.cancelledBy==='client' && meClient) || (m.cancelledBy==='talent' && !meClient);
+    const who = byMe ? 'You' : (m.cancelledBy==='client' ? (m.clientName||'The client') : (m.studentName||'The talent'));
+    const when = m.cancelledAt ? m.cancelledAt.toLocaleString('en-ZA',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    document.getElementById('modal').classList.remove('auth-modal');
+    document.getElementById('modal').innerHTML = `
+      <div class="modal-head"><div><h3 style="font-size:1.2rem">Cancelled engagement</h3><div style="font-size:.85rem;color:var(--muted);margin-top:3px">${esc(m.jobTitle||m.projectTitle||'Engagement')}</div></div><button class="modal-x" onclick="closeModal()" aria-label="Close">×</button></div>
+      <div class="modal-body">
+        <div class="contract-sigs">
+          <div class="contract-sig-row"><span class="csr-label">Cancelled by</span><span class="csr-done">${esc(who)}${when?`<small>${esc(when)}</small>`:''}</span></div>
+          <div class="contract-sig-row"><span class="csr-label">Reason</span><span class="csr-done">${esc(cancelReasonLabel(m.cancelReason))}</span></div>
+          ${m.cancelNote?`<div class="contract-sig-row"><span class="csr-label">Note</span><span class="csr-done">${esc(m.cancelNote)}</span></div>`:''}
+        </div>
+        <p style="font-size:.85rem;color:var(--muted);margin-top:14px">Work properly done before cancellation must still be paid for. See the <a href="cancellation.html" target="_blank" rel="noopener">Cancellation Policy</a>.</p>
+        <button class="btn btn-outline btn-block" style="margin-top:8px" onclick="closeModal()">Close</button>
+      </div>`;
+    showOverlay();
+  };
+
   window.dashTogglePaid = function(projectId, studentUid, paid){ const uid=_uid(); window.firebaseDB.setMemberPaid(uid,projectId,studentUid, paid===true||paid==='true').then(ok=>{ if(ok){ PROJECT_MEMBERS[projectId]=null; ensureProjectMembers(projectId,()=>paintMain()); } }); };
-  window.dashPayAll = function(projectId){ const uid=_uid(); const list=(PROJECT_MEMBERS[projectId]||[]).filter(m=>m.inviteStatus==='accepted'&&m.memberState!=='dismissed'&&!m.paid); if(!list.length) return; Promise.all(list.map(m=>window.firebaseDB.setMemberPaid(uid,projectId,m.studentUid,true))).then(()=>{ PROJECT_MEMBERS[projectId]=null; ensureProjectMembers(projectId,()=>paintMain()); toast('Marked as paid','Real payment integration is coming soon.'); }); };
+  window.dashPayAll = function(projectId){ const uid=_uid(); const list=(PROJECT_MEMBERS[projectId]||[]).filter(m=>m.inviteStatus==='accepted'&&m.memberState==='onboarded'&&!m.paid); if(!list.length) return; Promise.all(list.map(m=>window.firebaseDB.setMemberPaid(uid,projectId,m.studentUid,true))).then(()=>{ PROJECT_MEMBERS[projectId]=null; ensureProjectMembers(projectId,()=>paintMain()); toast('Marked as paid','Real payment integration is coming soon.'); }); };
   window.dashRemoveMember = function(projectId, studentUid){ const uid=_uid(); window.firebaseDB.removeMember(uid,projectId,studentUid).then(ok=>{ if(ok){ PROJECT_MEMBERS[projectId]=null; ensureProjectMembers(projectId,()=>paintMain()); } }); };
   // Review a talent you've PAID (the only place reviews can be started).
   window.dashReviewMember = function(projectId, studentUid){
@@ -1269,6 +1445,17 @@
         const missing = ps.items.filter(i=>!i[1]).map(i=>i[0]).slice(0,2).join(', ');
         items.push({ icon:I.rocket, title:'Complete your profile', body:'Build trust with talent. Still missing: '+missing+'.', ts:0, href:'profile.html' });
       }
+      // A talent cancelled an engagement (best-effort: scans the project members
+      // already loaded this session; the project card itself always shows it).
+      const cxl=[];
+      Object.keys(PROJECT_MEMBERS||{}).forEach(pid=>{ (PROJECT_MEMBERS[pid]||[]).forEach(m=>{ if(m.memberState==='cancelled' && m.cancelledBy==='talent') cxl.push(m); }); });
+      if(cxl.length){
+        cxl.sort((a,b)=>{ const ta=a.cancelledAt, tb=b.cancelledAt; return (tb instanceof Date?tb.getTime():0)-(ta instanceof Date?ta.getTime():0); });
+        const ts=(cxl[0].cancelledAt instanceof Date)?cxl[0].cancelledAt.getTime():Date.now();
+        items.push({ icon:I.x, title: cxl.length===1?'Engagement cancelled':cxl.length+' engagements cancelled',
+          body: cxl.length===1 ? ((cxl[0].studentName||'A talent')+' cancelled "'+(cxl[0].jobTitle||cxl[0].projectTitle||'an engagement')+'". Work already done must still be settled.') : (cxl.length+' talent cancelled engagements. Open Projects for details.'),
+          ts, view:'projects' });
+      }
       // No jobs yet - post nudge
       if(MY_JOBS && MY_JOBS.length===0){
         items.push({ icon:I.plus, title:'Post your first job', body:'Post a job to start receiving applications from verified ICT talent.', ts:0, act:'openJob()' });
@@ -1295,12 +1482,23 @@
       }
       // Service Agreement waiting for the talent's signature (client has signed).
       if(MY_INVITES && MY_INVITES.length){
-        const toSign = MY_INVITES.filter(m=>m.inviteStatus==='accepted' && m.memberState!=='onboarded' && m.clientSignedAt && !m.talentSignedAt)
+        const toSign = MY_INVITES.filter(m=>m.inviteStatus==='accepted' && m.memberState!=='onboarded' && m.memberState!=='cancelled' && m.clientSignedAt && !m.talentSignedAt)
           .sort((a,b)=>{ const ta=a.clientSignedAt, tb=b.clientSignedAt; return (tb instanceof Date?tb.getTime():0)-(ta instanceof Date?ta.getTime():0); });
         if(toSign.length){
           const ts = (toSign[0].clientSignedAt instanceof Date) ? toSign[0].clientSignedAt.getTime() : Date.now();
           items.push({ icon:I.check, title:'Sign your Service Agreement',
             body:(toSign.length===1?((toSign[0].clientName||'A client')+' has signed. Counter-sign to be onboarded.'):(toSign.length+' agreements are waiting for your signature.')), ts, view:'invites' });
+        }
+      }
+      // A client cancelled an engagement with you.
+      if(MY_INVITES && MY_INVITES.length){
+        const cxl = MY_INVITES.filter(m=>m.memberState==='cancelled' && m.cancelledBy==='client')
+          .sort((a,b)=>{ const ta=a.cancelledAt, tb=b.cancelledAt; return (tb instanceof Date?tb.getTime():0)-(ta instanceof Date?ta.getTime():0); });
+        if(cxl.length){
+          const ts=(cxl[0].cancelledAt instanceof Date)?cxl[0].cancelledAt.getTime():Date.now();
+          items.push({ icon:I.x, title: cxl.length===1?'Engagement cancelled':cxl.length+' engagements cancelled',
+            body: cxl.length===1 ? ((cxl[0].clientName||'A client')+' cancelled "'+(cxl[0].jobTitle||cxl[0].projectTitle||'an engagement')+'". Work you\'ve already done must still be paid for.') : ('Clients cancelled '+cxl.length+' engagements. See your Jobs section for details.'),
+            ts, view:'proposals' });
         }
       }
       // Meetings a client has scheduled / updated (talent-facing). meetingUpdatedAt
@@ -1948,13 +2146,14 @@
     const reviews=REVIEWS_ME||[];
     const tkey=m=> (m.acceptedAt||m.respondedAt||m.invitedAt||new Date(0)).getTime();
     const applied = props.filter(p=>['submitted','viewed','interview','offer'].indexOf(p.status)>=0).sort((a,b)=>b.createdAt-a.createdAt);
-    const active  = invites.filter(m=>m.inviteStatus==='accepted' && m.memberState!=='dismissed' && !m.paid).sort((a,b)=>tkey(b)-tkey(a));
-    const history = invites.filter(m=>m.paid).sort((a,b)=>tkey(b)-tkey(a));
+    const active  = invites.filter(m=>m.inviteStatus==='accepted' && m.memberState!=='dismissed' && m.memberState!=='cancelled' && !m.paid).sort((a,b)=>tkey(b)-tkey(a));
+    const history = invites.filter(m=>m.paid && m.memberState!=='cancelled').sort((a,b)=>tkey(b)-tkey(a));
     const declined = props.filter(p=>p.status==='declined');
+    const cancelled = invites.filter(m=>m.memberState==='cancelled').sort((a,b)=>{ const ta=a.cancelledAt, tb=b.cancelledAt; return (tb instanceof Date?tb.getTime():0)-(ta instanceof Date?ta.getTime():0); });
     const stars=n=>{ n=Math.max(0,Math.min(5,Math.round(n))); let s=''; for(let i=1;i<=5;i++) s+=(i<=n?'★':'☆'); return s; };
     const reviewFor=cid=>reviews.find(r=>r.clientUid===cid);
 
-    if(!applied.length && !active.length && !history.length && !declined.length){
+    if(!applied.length && !active.length && !history.length && !declined.length && !cancelled.length){
       return `<section class="dash-panel" data-reveal>${sectionHead('Jobs','Your applications, active work and history')}
         ${analyticsEmpty(I.briefcase,'No jobs yet','Browse open jobs and apply - your applications, active work and history will appear here.')}
         <div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="dashSetView('findwork')">${I.search} Find work</button></div></section>`;
@@ -1976,7 +2175,7 @@
         : `<span class="dash-status st-viewed">Contract pending</span>`;
       return `<div class="dash-jobrow" data-reveal><div class="dash-jobrow-main"><strong>${esc(name)}</strong>
         <span class="dash-td-sub">${esc(m.clientName||'Client')}${extra} · ${onb?'onboarded':'awaiting onboarding'}</span></div>
-        ${chip}</div>`;
+        ${chip}<button class="proj-textbtn danger" onclick="dashCancelEngagementTalent('${m.projectId}')">Cancel</button></div>`;
     }).join('');
     const historyRows=history.map(m=>{
       const name=m.jobTitle||m.projectTitle||'Job';
@@ -1987,7 +2186,12 @@
     }).join('');
     const block=(title,rows,sub)=> rows?`<section class="dash-panel" data-reveal>${sectionHead(title,sub)}<div class="dash-joblist-col">${rows}</div></section>`:'';
     const declinedBlock=declined.length?`<section class="dash-panel" data-reveal><details class="dash-jobs-declined"><summary>${declined.length} not selected this time</summary><div class="dash-joblist-col" style="margin-top:10px">${declined.map(p=>`<div class="dash-jobrow muted"><div class="dash-jobrow-main"><strong>${esc(p.jobTitle||'Job')}</strong><span class="dash-td-sub">The client went another way - keep going, more opportunities are coming.</span></div></div>`).join('')}</div></details></section>`:'';
-    return `${block('Active jobs',activeRows,active.length+' onboarded')}${block('Applied',appliedRows,applied.length+' in progress')}${block('History',historyRows,history.length+' completed')}${declinedBlock}`;
+    const cancelledBlock=cancelled.length?`<section class="dash-panel" data-reveal><details class="dash-jobs-declined"><summary>${cancelled.length} cancelled engagement${cancelled.length===1?'':'s'}</summary><div class="dash-joblist-col" style="margin-top:10px">${cancelled.map(m=>{
+      const who=m.cancelledBy==='talent'?'you':(m.cancelledBy==='client'?esc((m.clientName||'the client').split(' ')[0]):'');
+      const when=m.cancelledAt?' · '+m.cancelledAt.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'}):'';
+      return `<div class="dash-jobrow muted"><div class="dash-jobrow-main"><strong>${esc(m.jobTitle||m.projectTitle||'Job')}</strong><span class="dash-td-sub">Cancelled${who?' by '+who:''}${when} · ${esc(cancelReasonLabel(m.cancelReason))}${m.paid?' · work paid':''}</span></div><button class="proj-textbtn" onclick="dashViewCancellation('${m.projectId}','${m.studentUid}')">Details</button></div>`;
+    }).join('')}</div></details></section>`:'';
+    return `${block('Active jobs',activeRows,active.length+' onboarded')}${block('Applied',appliedRows,applied.length+' in progress')}${block('History',historyRows,history.length+' completed')}${declinedBlock}${cancelledBlock}`;
   }
 
   // ════════════════════════════════════════════════════════════════════

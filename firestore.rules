@@ -224,14 +224,38 @@ service cloud.firestore {
           function okMeetingLink(d) {
             return !('meetingLink' in d) || d.meetingLink == '' || safeUrl(d.meetingLink);
           }
+          // ── Engagement cancellation (see cancellation.html) ──
+          // A cancel write flips memberState to 'cancelled' with a record of who
+          // cancelled (must be the acting party), when (server clock only) and an
+          // allowlisted reason. Only live engagements can be cancelled, so the
+          // state is terminal - nobody can cancel twice or edit the record after.
+          function isCancelWrite() {
+            return 'memberState' in request.resource.data.diff(resource.data).affectedKeys()
+              && request.resource.data.memberState == 'cancelled';
+          }
+          function okCancel(role) {
+            return resource.data.get('memberState', 'active') in ['active', 'onboarded']
+              && request.resource.data.cancelledBy == role
+              && request.resource.data.cancelledAt == request.time
+              && request.resource.data.cancelReason in ['scope','budget','timeline','unresponsive','quality','workload','personal','other']
+              && ( !('cancelNote' in request.resource.data) || safeStr(request.resource.data.cancelNote, 0, 500) );
+          }
+          // Outside a genuine cancellation, the cancellation record is frozen -
+          // neither party may write, edit or clear these fields.
+          function cancelRecordUntouched() {
+            return !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['cancelledAt','cancelledBy','cancelReason','cancelNote']);
+          }
           allow read: if verified() && (request.auth.uid == userId || request.auth.uid == studentUid);
-          // Creation can never pre-set the talent's signature or an onboarded
-          // state - onboarding only ever happens through the two-party signing.
+          // Creation can never pre-set the talent's signature, an onboarded
+          // state, or a cancellation record - onboarding only ever happens
+          // through the two-party signing, cancellation through a cancel write.
           allow create: if isOwner(userId)
             && request.resource.data.studentUid == studentUid
             && okMeetingLink(request.resource.data)
             && !('talentSignedAt' in request.resource.data)
             && !('talentSignerName' in request.resource.data)
+            && !request.resource.data.keys().hasAny(['cancelledAt','cancelledBy','cancelReason','cancelNote'])
             && request.resource.data.get('memberState', 'active') == 'active';
           // The project owner controls the membership. The invited student may
           // ONLY set their invite response + their own contact, OR counter-sign
@@ -245,10 +269,15 @@ service cloud.firestore {
                  // The owner can NEVER write the talent's signature fields.
                  && !('talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys())
                  && !('talentSignerName' in request.resource.data.diff(resource.data).affectedKeys())
-                 // The owner can't force 'onboarded' - that state is only reached
-                 // through the talent's counter-signature.
+                 // The owner can't force 'onboarded' (that state is only reached
+                 // through the talent's counter-signature), can't touch a
+                 // cancelled engagement's state, and may only cancel with a
+                 // valid, server-stamped cancellation record.
                  && ( !('memberState' in request.resource.data.diff(resource.data).affectedKeys())
-                      || request.resource.data.memberState in ['active','dismissed'] )
+                      || ( request.resource.data.memberState in ['active','dismissed']
+                           && resource.data.get('memberState', 'active') != 'cancelled' )
+                      || ( request.resource.data.memberState == 'cancelled' && okCancel('client') ) )
+                 && ( isCancelWrite() || cancelRecordUntouched() )
                  // The owner's own signature must be the server clock + a sane name.
                  && ( !('clientSignedAt' in request.resource.data.diff(resource.data).affectedKeys())
                       || request.resource.data.clientSignedAt == request.time )
@@ -256,7 +285,7 @@ service cloud.firestore {
                       || safeStr(request.resource.data.clientSignerName, 0, 120) ) )
             || ( request.auth.uid == studentUid
                  && request.resource.data.diff(resource.data).affectedKeys()
-                      .hasOnly(['inviteStatus','studentEmail','studentPhone','respondedAt','talentSignedAt','talentSignerName','memberState','onboardedAt'])
+                      .hasOnly(['inviteStatus','studentEmail','studentPhone','respondedAt','talentSignedAt','talentSignerName','memberState','onboardedAt','cancelledAt','cancelledBy','cancelReason','cancelNote'])
                  && request.resource.data.inviteStatus in ['pending','accepted','declined']
                  && ( !('studentEmail' in request.resource.data) || safeStr(request.resource.data.studentEmail, 0, 160) )
                  && ( !('studentPhone' in request.resource.data) || safeStr(request.resource.data.studentPhone, 0, 40) )
@@ -264,12 +293,15 @@ service cloud.firestore {
                  // Signing timestamps must be the server clock.
                  && ( !( 'talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys() ) || request.resource.data.talentSignedAt == request.time )
                  && ( !( 'onboardedAt' in request.resource.data.diff(resource.data).affectedKeys() ) || request.resource.data.onboardedAt == request.time )
-                 // The student may only move memberState to 'onboarded', and only
-                 // by signing, once the client has already signed.
+                 // The student may move memberState to 'onboarded' only by
+                 // signing once the client has already signed, or to 'cancelled'
+                 // with a valid, server-stamped cancellation record of their own.
                  && ( !( 'memberState' in request.resource.data.diff(resource.data).affectedKeys() )
                       || ( request.resource.data.memberState == 'onboarded'
                            && ( 'talentSignedAt' in request.resource.data.diff(resource.data).affectedKeys() )
-                           && resource.data.get('clientSignedAt', null) != null ) ) )
+                           && resource.data.get('clientSignedAt', null) != null )
+                      || ( request.resource.data.memberState == 'cancelled' && okCancel('talent') ) )
+                 && ( isCancelWrite() || cancelRecordUntouched() ) )
           );
           allow delete: if isOwner(userId);
         }

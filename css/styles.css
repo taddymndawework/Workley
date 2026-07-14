@@ -1126,7 +1126,9 @@
       -webkit-backdrop-filter:saturate(180%) blur(12px);backdrop-filter:saturate(180%) blur(12px);
       border-top:1px solid var(--border);box-shadow:0 -6px 22px rgba(22,24,29,.10);}
     .mobile-cta .btn{flex:1;}
-    body{padding-bottom:74px;}
+    /* Reserve room for the fixed CTA bar ONLY on pages that actually have it
+       (index/catalog/profile/smart-match) - not the dashboard or legal pages. */
+    body:has(.mobile-cta){padding-bottom:74px;}
   }
   @media(max-width:380px){
     .hero h1{font-size:2.28rem;}
@@ -1715,6 +1717,11 @@ button.dash-notif-item:hover{background:var(--blue-50);}
   .dash-ichart{height:180px;}
   .dash-jobmanage{flex-direction:column;align-items:stretch;}
   .dash-jobmanage-actions{justify-content:flex-start;}
+  /* Job rows: give the title its own full-width line so status chips and the
+     quiet Cancel action never crush it on narrow screens. */
+  .dash-jobrow{flex-wrap:wrap;row-gap:8px;}
+  .dash-jobrow-main{flex:1 1 100%;}
+  .dash-jobrow.col .dash-jobrow-main{flex:1 1 auto;}
 }
 @media(prefers-reduced-motion:reduce){
   .dash-ic-line,.dash-prop-fill,.dash-prop-fill{animation:none!important;transform:none!important;}
@@ -2100,8 +2107,18 @@ button.dash-thread-av:hover{filter:brightness(.94);}
 .proj-state svg{width:15px;height:15px;}
 .proj-state.onboarded{color:#15803d;}
 .proj-state.dismissed{color:var(--muted);}
+.proj-state.cancelled{color:#c1402f;}
 .proj-textbtn{background:none;border:none;color:var(--blue);font-weight:600;font-size:.8rem;cursor:pointer;font-family:"Plus Jakarta Sans",sans-serif;}
 .proj-textbtn:hover{text-decoration:underline;}
+/* Engagement cancellation - deliberately quiet, never promoted */
+.proj-textbtn.danger{color:var(--muted);}
+.proj-textbtn.danger:hover{color:#c1402f;}
+.proj-member.cancelled{opacity:.72;}
+.proj-inv-card.cancelled{opacity:.78;}
+.cancel-inline{margin-top:2px;text-align:right;}
+.cancel-inline .proj-textbtn{font-size:.74rem;font-weight:500;}
+.cancel-danger-btn{color:var(--muted);border-color:var(--border);}
+.cancel-danger-btn:hover{color:#c1402f;border-color:#e7b8b0;background:#fef7f6;}
 .proj-inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
 .proj-inv-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:8px;}
 .proj-inv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
@@ -2249,6 +2266,16 @@ html.wk-glow .hero h1{animation:slideUp .8s var(--ease) .2s both, heroGlowText 1
 .legal-doc table.legal-tbl{width:100%;border-collapse:collapse;margin:8px 0 20px;font-size:.92rem;}
 .legal-doc table.legal-tbl th,.legal-doc table.legal-tbl td{border:1px solid var(--border);padding:10px 12px;text-align:left;vertical-align:top;}
 .legal-doc table.legal-tbl th{background:var(--grey-50);font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;color:var(--ink);}
+/* Phones: stack each table row into a card - three squeezed columns are
+   unreadable at 375px. Column headers come from each cell's data-th. */
+@media(max-width:560px){
+  .legal-doc table.legal-tbl, .legal-doc table.legal-tbl tbody, .legal-doc table.legal-tbl tr, .legal-doc table.legal-tbl td{display:block;width:100%;}
+  .legal-doc table.legal-tbl tr:first-child{display:none;}
+  .legal-doc table.legal-tbl tr{border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;}
+  .legal-doc table.legal-tbl td{border:0;border-bottom:1px solid var(--border);padding:10px 14px;}
+  .legal-doc table.legal-tbl tr td:last-child{border-bottom:0;}
+  .legal-doc table.legal-tbl td::before{content:attr(data-th);display:block;font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+}
 .legal-toc{background:var(--grey-50);border:1px solid var(--border);border-radius:16px;padding:18px 22px;margin-bottom:30px;}
 .legal-toc h4{font-family:"Plus Jakarta Sans",sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;}
 .legal-toc ol{margin:0;padding-left:20px;columns:2;column-gap:28px;}
